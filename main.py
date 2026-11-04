@@ -32,37 +32,4 @@ async def analyser_match_custom(update: Update, context: ContextTypes.DEFAULT_TY
             f"🎯 **2. Prédictions Clés & Marchés VIP :**\n"
             f"• Temps Réglementaire : Match ouvert avec une forte probabilité d'un total supérieur à **7.5 buts**.\n"
             f"• Les deux équipes marquent : **Oui (Option ultra-sécurisée validée par l'historique)**.\n"
-            f"• Tendance 1X2 / Série principale : Duel serré, avantage aux équipes ayant un historique récent de tirs réussis.\n\n"
-            
-            f"🥅 **3. Fiabilité des Penalties (Série 1 à 3) :**\n"
-            f"• Pénalty (1) - Oui : *Confiance maximale* (Cotes ~1.13 - 1.15)\n"
-            f"• Pénalty (2) & (3) - Oui : *Validé par les patterns de tirs de la ligue*.\n\n"
-            
-            f"💡 **4. Recommandation VIP Finale :**\n"
-            f"✅ **Pari Principal :** Plus de 7.5 buts dans le match\n"
-            f"✅ **Pari Secondaire :** Pénalty 1 - Oui (Pour les deux équipes)\n"
-            f"⭐ *Note de l'analyste :* Analyse déduite des schémas de résultats récents de la session, zéro hasard."
-        )
-        
-        await update.message.reply_text(reponse, parse_mode="Markdown")
-    else:
-        await update.message.reply_text(
-            "⚠️ **Format incorrect.**\n"
-            "Veuillez utiliser la syntaxe exacte :\n"
-            "`/match Équipe 1 vs Équipe 2`",
-            parse_mode="Markdown"
-        )
-
-def main():
-    TOKEN = "VOTRE_TOKEN_TELEGRAM"
-    
-    application = Application.builder().token(TOKEN).build()
-
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("match", analyser_match_custom))
-
-    print("Le bot est en cours d'exécution...")
-    application.run_polling()
-
-if __name__ == "__main__":
-    main()
+            f"• Tendance 1X2 / Série principale : Duel serré, avantage aux équipes ayant
