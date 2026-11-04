@@ -32,4 +32,4 @@ async def analyser_match_custom(update: Update, context: ContextTypes.DEFAULT_TY
             f"🎯 **2. Prédictions Clés & Marchés VIP :**\n"
             f"• Temps Réglementaire : Match ouvert avec une forte probabilité d'un total supérieur à **7.5 buts**.\n"
             f"• Les deux équipes marquent : **Oui (Option ultra-sécurisée validée par l'historique)**.\n"
-            f"• Tendance 1X2 / Série principale : Duel serré, avantage aux équipes ayant
+            f"• Tendance 1X2 / Série principale : Duel serré, avantage aux équipes ayant"
