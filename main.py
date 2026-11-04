@@ -75,7 +75,8 @@ def main():
     application.add_handler(CommandHandler("match", match_command))
     
     print("Bot démarré avec succès !")
-    application.run_polling()
+    application.run_polling(drop_pending_updates=True)
+
 
 if __name__ == '__main__':
     main()
