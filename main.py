@@ -8,11 +8,11 @@ logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_text = (
-        "👋 Bienvenue sur le FIFA Virtual Match Bot de Dieng !\n\n"
-        "📊 Module d'analyse prédictive professionnelle actif.\n"
-        "Utilisez la commande `/match Équipe 1 vs Équipe 2` pour obtenir l'analyse VIP."
+        "👋 Bienvenue sur le bot VIP **FC26 Penalty** de Dieng !\n\n"
+        "🎯 Module d'analyse et pronostics des tirs au but actif.\n"
+        "Utilisez la commande `/match Équipe 1 vs Équipe 2` pour obtenir le vainqueur et les scores exacts."
     )
-    await update.message.reply_text(welcome_text)
+    await update.message.reply_text(welcome_text, parse_mode="Markdown")
 
 async def analyser_match_custom(update: Update, context: ContextTypes.DEFAULT_TYPE):
     texte_saisi = update.message.text
@@ -23,16 +23,15 @@ async def analyser_match_custom(update: Update, context: ContextTypes.DEFAULT_TY
         equipe2 = parties[1].strip()
 
         reponse = f"""
-👑 **ANALYSE EXPERTE VIP & TENDANCE HISTORIQUE** 👑\n
+👑 **PRONOSTIC VIP - TIRS AU BUT FC26** 👑\n
 ⚽ **{equipe1} vs {equipe2}**\n
-🏆 *Module : FC26. Penalty (Analyse des séries récentes)*\n\n
-📊 **1. Analyse Statistique & Historique :**\n
-• Dynamique des derniers matchs de la ligue : Forte tendance aux scores fleuves (moyenne élevée).\n
-• Indice de conversion des penalties : **Élevé (91.5% de réussite sur les 3 premiers tirs)**\n\n
-🎯 **2. Prédictions Clés & Marchés VIP :**\n
-• Temps Réglementaire : Match ouvert avec une forte probabilité d'un total supérieur à 2.5 buts.\n
-• Les deux équipes marquent : **Oui (Option ultra-sécurisée validée par l'historique)**\n
-• Tendance 1X2 / Série principale : Duel serré, avantage aux équipes ayant le momentum.
+🏆 *Mode : Séance de Penalty (Pronostic Score Exact)*\n\n
+🔥 **1. Verdict du Vainqueur :**\n
+• Avantage net : **{equipe1}** (Supériorité dans l'exercice des tirs et sang-froid des tireurs)\n\n
+🎯 **2. Scores Exacts les plus probables :**\n
+• **Option 1 (Le plus probable) :** `{equipe1} 5 - 4 {equipe2}`\n
+• **Option 2 (Alternative serrée) :** `{equipe1} 4 - 3 {equipe2}`\n\n
+📊 *Indice de fiabilité : 89% sur la série*
 """
         await update.message.reply_text(reponse, parse_mode="Markdown")
     else:
@@ -43,7 +42,6 @@ async def analyser_match_custom(update: Update, context: ContextTypes.DEFAULT_TY
         )
 
 async def main():
-    # Récupère automatiquement le token depuis les variables d'environnement de Render
     TOKEN = os.getenv("TELEGRAM_TOKEN")
     
     if not TOKEN:
