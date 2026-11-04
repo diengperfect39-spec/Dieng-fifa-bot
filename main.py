@@ -3,9 +3,9 @@ import random
 import threading
 from flask import Flask
 from telegram import Update
-from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
-# 1. Petit serveur web pour satisfaire Render
+# 1. Petit serveur web pour satisfaire Render et UptimeRobot
 app = Flask('')
 
 @app.route('/')
@@ -16,7 +16,8 @@ def run_web():
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
 
-# 2. Fonction de génération des pronostics (avec de l'aléa)
+
+# 2. Fonction de génération des pronostics
 def get_match_prediction(team1, team2):
     scenarios = [
         ("5 - 4", "4 - 3", 87),
@@ -24,27 +25,28 @@ def get_match_prediction(team1, team2):
         ("5 - 3", "4 - 3", 91),
         ("6 - 5", "5 - 4", 78),
         ("4 - 3", "2 - 1", 85),
-        ("3 - 2", "4 - 3", 89)
+        ("3 - 2", "4 - 3", 89),
     ]
-    score_opt1, score_opt2, reliability = random.choice(scenarios)
     
-    winner = team1 if random.random() > 0.35 else team2
+    score_opt1, score_opt2, reliability = random.choice(scenarios)
+    winner = team1 if random.random() > 0.5 else team2
     loser = team2 if winner == team1 else team1
     
-    return f"""👑 **PRONOSTIC VIP - TIRS AU BUT FC26** 👑
+    return f"""👑 **PRONOSTIC VIP - TIRS AU BUT**
 
 ⚽ **{team1} vs {team2}**
 
-🏆 **Mode : Séance de Penalty (Pronostic Score Exact)**
+🏆 **Mode : Séance de Penalty (Pronostic Exclusif)**
 
 🔥 **1. Verdict du Vainqueur :**
-• Avantage net : **{winner}** (Supériorité dans l'exercice des tirs et sang-froid des tireurs)
+• Avantage net : **{winner}** (Supériorité psychologique estimée)
 
 🎯 **2. Scores Exacts les plus probables :**
 • **Option 1 (Le plus probable)** : {winner} {score_opt1} {loser}
 • **Option 2 (Alternative serrée)** : {winner} {score_opt2} {loser}
 
-📊 **Indice de fiabilité :** {reliability}% sur la série"""
+📊 **Indice de fiabilité :** {reliability}%"""
+
 
 # 3. Commande /match sur Telegram
 async def match_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -56,11 +58,12 @@ async def match_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         team1 = "Équipe 1"
         team2 = "Équipe 2"
-        
+
     prediction = get_match_prediction(team1, team2)
     await update.message.reply_text(prediction, parse_mode="Markdown")
 
-# 4. Démarrage principal du bot et du serveur
+
+# 4. Démarrage principal du bot et du serveur web
 def main():
     token = os.environ.get("TELEGRAM_TOKEN")
     if not token:
@@ -68,7 +71,7 @@ def main():
         return
 
     # Lancement du serveur web Flask en arrière-plan (pour Render)
-    threading.Thread(target=run_web).daemon = True
+    threading.Thread(target=run_web, daemon=True).start()
 
     # Lancement du bot Telegram en mode polling
     application = ApplicationBuilder().token(token).build()
@@ -76,7 +79,6 @@ def main():
     
     print("Bot démarré avec succès !")
     application.run_polling(drop_pending_updates=True)
-
 
 if __name__ == '__main__':
     main()
