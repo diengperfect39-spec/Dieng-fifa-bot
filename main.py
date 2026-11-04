@@ -1,4 +1,5 @@
 import logging
+import os
 import asyncio
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
@@ -42,19 +43,22 @@ async def analyser_match_custom(update: Update, context: ContextTypes.DEFAULT_TY
         )
 
 async def main():
-    TOKEN = "YOUR_TOKEN_HERE"
+    # Récupère automatiquement le token depuis les variables d'environnement de Render
+    TOKEN = os.getenv("TELEGRAM_TOKEN")
     
+    if not TOKEN:
+        logging.error("Aucun token Telegram trouvé dans les variables d'environnement !")
+        return
+
     application = Application.builder().token(TOKEN).build()
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("match", analyser_match_custom))
 
-    # Lancement propre de la boucle pour python-telegram-bot v20+
     await application.initialize()
     await application.start()
     await application.updater.start_polling()
     
-    # Garde le bot actif
     stop_signal = asyncio.Event()
     await stop_signal.wait()
 
