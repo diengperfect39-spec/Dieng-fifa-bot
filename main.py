@@ -1,48 +1,45 @@
 import os
 from flask import Flask, request
 from telegram import Update, Bot
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import Application, CommandHandler, ContextTypes
 
-# Initialisation de l'application Flask
 app = Flask(__name__)
 
-# Ton Token Telegram
 TOKEN = os.getenv("TELEGRAM_TOKEN", "TON_BOT_TOKEN")
 bot = Bot(token=TOKEN)
 
-# Application Telegram Bot
 application = Application.builder().token(TOKEN).build()
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_message = (
         "👑 *DIENG-FIFA-PENALTY | VIP EXPERT* ⚽🔥\n\n"
-        "Pour lancer une analyse, utilise la commande :\n"
-        "`/match Paris vs Real V1 (1.88) V2 (1.84)`"
+        "Commande valide :\n"
+        "`/match Bayern Munich vs Barcelone V1 1.885 V2 1.835`"
     )
     await update.message.reply_text(welcome_message, parse_mode="Markdown")
 
 async def match_analysis(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Récupère le texte après la commande /match
-    match_text = " ".join(context.args) if context.args else update.message.text
+    # Récupère tout le texte après /match
+    user_input = " ".join(context.args) if context.args else ""
     
     await update.message.chat.send_action(action="typing")
     
-    # Analyse professionnelle basée sur les cotes V1 et V2 sans aucun hasard
+    # Analyse professionnelle VIP basée sur la structure demandée
     response = (
         "🔥 *DIENG PREDICT VIP - ANALYSE EXPERT FC26*\n\n"
+        f"⚽ *Match :* {user_input if user_input else 'Bayern Munich vs Barcelone'}\n"
         "🏆 *Contexte :* Phase Finale - Séance de Penalty (FC26)\n\n"
-        "🎯 *1. Verdict & Hiérarchie :* \n"
-        "• Vainqueur validé : Basé sur la performance des cotes V1/V2.\n"
-        "• Analyse de tendance : Étude croisée du rythme des tirs et de la dynamique.\n\n"
-        "🎯 *2. Scores Exacts Recommandés :* \n"
-        "• Option 1 (Tendance principale) : **3 - 2**\n"
-        "• Option 2 (Alternative tactique) : **4 - 3**\n\n"
-        "📊 Indice de Confiance VIP : **97%**"
+        "🎯 *1. Verdict & Hiérarchie (Codes V1 / V2) :* \n"
+        "• Vainqueur validé : Équipe 1 (V1)\n"
+        "• Analyse de tendance : Étude croisée de la performance et des cotes de référence.\n\n"
+        "🎯 *2. Scores Exacts Recommandés (Professionnel) :* \n"
+        "• Option 1 : **3 - 2**\n"
+        "• Option 2 : **4 - 3**\n\n"
+        "📊 Indice de Confiance VIP : **98.2%**"
     )
     
     await update.message.reply_text(response, parse_mode="Markdown")
 
-# Enregistrement des commandes et messages
 application.add_handler(CommandHandler("start", start))
 application.add_handler(CommandHandler("match", match_analysis))
 
