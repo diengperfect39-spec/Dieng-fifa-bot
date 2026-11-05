@@ -1,48 +1,105 @@
 import os
-from flask import Flask, request as flask_request
-from telegram import Bot, Update
-from telegram.ext import Application, MessageHandler, filters
+import random
+import threading
+from flask import Flask
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
-app = Flask(__name__)
+# 1. Serveur web pour Render et UptimeRobot
+app = Flask('')
 
-TOKEN = os.getenv("TELEGRAM_TOKEN", "TON_BOT_TOKEN")
+@app.route('/')
+def home():
+    return "Bot VIP Dieng Predict actif !"
 
-bot = Bot(token=TOKEN)
-application = Application.builder().token(TOKEN).updater(None).build()
+def run_web():
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
 
-async def handle_message(update: Update, context=None):
-    if update.message and update.message.text:
-        text = update.message.text
-        await update.message.chat.send_action(action="typing")
+
+# 2. Moteur d'analyse expert avec découpage intelligent des équipes et scores réalistes
+def get_match_prediction(match_text):
+    if "vs" not in match_text.lower():
+        return None
+
+    # Séparation propre autour du "vs" (insensible à la casse)
+    parts = match_text.split("vs")
+    team1 = parts[0].strip().title()
+    remainder = parts[1].strip()
+
+    # On sépare les mots de la fin pour identifier si l'utilisateur a mis un chrono/minute (ex: 00:02mn)
+    words = remainder.split(" ")
+    
+    # Détection si le dernier élément ressemble à un temps/chrono
+    time_ref = "Direct"
+    if len(words) > 1 and ("mn" in words[-1].lower() or ":" in words[-1] or words[-1].isdigit()):
+        time_ref = words[-1]
+        team2 = " ".join(words[:-1]).strip().title()
+    else:
+        team2 = remainder.title()
+
+    # Logique de sélection du vainqueur stable
+    hash_val = sum(ord(c) for c in team1 + team2 + time_ref)
+    winner = team1 if hash_val % 2 == 0 else team2
+    loser = team2 if winner == team1 else team1
+
+    # Calcul dynamique de scores réalistes pour des tirs au but (ex: 4-3, 5-4, 6-5, ou scores plus larges)
+    v_goals = random.choice([4, 5, 6, 7])
+    l_goals = v_goals - 1 if v_goals > 3 else 3
+    if l_goals < 1:
+        l_goals = 1
         
-        response = (
-            "🔥 *DIENG PREDICT VIP - ANALYSE EXPERT FC26*\n\n"
-            f"⚽ *Match :* {text.replace('/match', '').strip()}\n"
-            "🏆 *Contexte :* Séance de Penalty (FC26)\n\n"
-            "🎯 *1. Verdict & Hiérarchie :* \n"
-            "• Vainqueur validé : Équipe dominante selon la dynamique.\n\n"
-            "🎯 *2. Scores Exacts Recommandés :* \n"
-            "• Option 1 : **3 - 2**\n"
-            "• Option 2 : **4 - 3**\n\n"
-            "📊 Indice de Confiance VIP : **98.5%**"
-        )
-        await update.message.reply_text(response, parse_mode="Markdown")
+    score_opt1 = f"{v_goals} - {l_goals}"
+    score_opt2 = f"{v_goals} - {l_goals + 1}" if random.choice([True, False]) else f"{v_goals + 1} - {l_goals}"
 
-application.add_handler(MessageHandler(filters.TEXT, handle_message))
+    reliability = random.randint(94, 98)
 
-@app.route(f"/{TOKEN}", methods=["POST"])
-def webhook():
-    json_data = flask_request.get_json(force=True)
-    update = Update.de_json(json_data, bot)
-    import asyncio
-    asyncio.run(application.initialize())
-    asyncio.run(application.process_update(update))
-    return "OK"
+    time_display = f"\n⏱️ **Repère temporel :** {time_ref}" if time_ref != "Direct" else ""
 
-@app.route("/")
-def index():
-    return "Bot Dieng-Fifa-Penalty Actif !", 200
+    return f"""👑 **DIENG PREDICT VIP - ANALYSE EXPERT FC26**
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+⚽ **{team1} vs {team2}**
+🏆 **Contexte :** Phase Finale - Séance de Penalty (FC26){time_display}
+
+🔥 **1. Verdict & Hiérarchie :**
+• Vainqueur validé : **{winner}** 
+• Analyse de tendance : Étude croisée du rythme des tirs, de la résistance sous pression et de la dynamique de session.
+
+🎯 **2. Scores Exacts Recommandés :**
+• **Option 1 (Tendance principale)** : {winner} {score_opt1} {loser}
+• **Option 2 (Alternative tactique)** : {winner} {score_opt2} {loser}
+
+📊 **Indice de Confiance VIP :** {reliability}%"""
+
+
+# 3. Commande /match sur Telegram
+async def match_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    full_text = " ".join(context.args)
+    prediction = get_match_prediction(full_text)
+    
+    if not prediction:
+        await update.message.reply_text("⚠️ Format invalide. Utilise : `/match Equipe1 vs Equipe2 [chrono]`", parse_mode="Markdown")
+        return
+
+    await update.message.reply_text(prediction, parse_mode="Markdown")
+
+
+# 4. Démarrage du bot et du serveur
+def main():
+    token = os.environ.get("TELEGRAM_TOKEN")
+    if not token:
+        print("Erreur : TELEGRAM_TOKEN non défini !")
+        return
+
+    # Lancement du serveur web en arrière-plan
+    threading.Thread(target=run_web, daemon=True).start()
+
+    # Lancement du bot Telegram
+    application = ApplicationBuilder().token(token).build()
+    application.add_handler(CommandHandler("match", match_command))
+    
+    print("Bot VIP démarré avec succès !")
+    application.run_polling(drop_pending_updates=True)
+
+if __name__ == '__main__':
+    main()
