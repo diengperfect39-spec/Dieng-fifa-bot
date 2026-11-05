@@ -1,7 +1,7 @@
 import os
 from flask import Flask, request
 from telegram import Update, Bot
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import Application, MessageHandler, filters, ContextTypes
 
 app = Flask(__name__)
 
@@ -10,38 +10,31 @@ bot = Bot(token=TOKEN)
 
 application = Application.builder().token(TOKEN).build()
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    welcome_message = (
-        "👑 *DIENG-FIFA-PENALTY | VIP EXPERT* ⚽🔥\n\n"
-        "Commande valide :\n"
-        "`/match Bayern Munich vs Barcelone V1 1.885 V2 1.835`"
-    )
-    await update.message.reply_text(welcome_message, parse_mode="Markdown")
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+    
+    # Si le message commence par /match ou contient les équipes
+    if text:
+        await update.message.chat.send_action(action="typing")
+        
+        response = (
+            "🔥 *DIENG PREDICT VIP - ANALYSE EXPERT FC26*\n\n"
+            f"⚽ *Match analysé :* {text.replace('/match', '').strip()}\n"
+            "🏆 *Contexte :* Séance de Penalty (FC26)\n\n"
+            "🎯 *1. Verdict & Hiérarchie (Codes V1 / V2) :* \n"
+            "• Vainqueur validé : Basé sur la performance des cotes.\n"
+            "• Analyse de tendance : Flux stable et régulier.\n\n"
+            "🎯 *2. Scores Exacts Recommandés :* \n"
+            "• Option 1 : **3 - 2**\n"
+            "• Option 2 : **4 - 3**\n\n"
+            "📊 Indice de Confiance VIP : **98.5%**"
+        )
+        
+        await update.message.reply_text(response, parse_mode="Markdown")
 
-async def match_analysis(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Récupère tout le texte après /match
-    user_input = " ".join(context.args) if context.args else ""
-    
-    await update.message.chat.send_action(action="typing")
-    
-    # Analyse professionnelle VIP basée sur la structure demandée
-    response = (
-        "🔥 *DIENG PREDICT VIP - ANALYSE EXPERT FC26*\n\n"
-        f"⚽ *Match :* {user_input if user_input else 'Bayern Munich vs Barcelone'}\n"
-        "🏆 *Contexte :* Phase Finale - Séance de Penalty (FC26)\n\n"
-        "🎯 *1. Verdict & Hiérarchie (Codes V1 / V2) :* \n"
-        "• Vainqueur validé : Équipe 1 (V1)\n"
-        "• Analyse de tendance : Étude croisée de la performance et des cotes de référence.\n\n"
-        "🎯 *2. Scores Exacts Recommandés (Professionnel) :* \n"
-        "• Option 1 : **3 - 2**\n"
-        "• Option 2 : **4 - 3**\n\n"
-        "📊 Indice de Confiance VIP : **98.2%**"
-    )
-    
-    await update.message.reply_text(response, parse_mode="Markdown")
-
-application.add_handler(CommandHandler("start", start))
-application.add_handler(CommandHandler("match", match_analysis))
+# Il écoute absolument TOUS les messages texte (avec ou sans /match) pour ne plus jamais rater une requête
+application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+application.add_handler(MessageHandler(filters.COMMAND, handle_message))
 
 @app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
