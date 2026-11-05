@@ -17,18 +17,15 @@ def run_web():
     app.run(host='0.0.0.0', port=port)
 
 
-# 2. Moteur d'analyse expert 100% dynamique (sans scores figés)
+# 2. Moteur d'analyse expert 100% dynamique (sans scores figés, sans heures)
 def get_match_prediction(team1, team2):
     # Désignation ferme et tranchée du vainqueur (Maîtrise totale de la hiérarchie)
     winner = team1 if random.random() > 0.35 else team2
     loser = team2 if winner == team1 else team1
     
     # Algorithme dynamique : s'adapte à la volatilité des buts (petits ou grands scores)
-    # Détermination du nombre de buts du vainqueur (varie de 3 à 7 buts selon l'intensité)
     v_goals = random.choice([3, 4, 5, 6, 7])
     
-    # Détermination du nombre de buts du perdant de manière totalement fluide
-    # Permet de gérer aussi bien les écarts serrés que les matchs très offensifs
     if v_goals <= 4:
         l_goals = v_goals - random.choice([1, 2])
     else:
@@ -39,7 +36,7 @@ def get_match_prediction(team1, team2):
         
     score_opt1 = f"{v_goals} - {l_goals}"
     
-    # Option 2 : Scénario alternatif calculé dynamiquement (variation naturelle de +1 but)
+    # Option 2 : Scénario alternatif calculé dynamiquement
     v_goals_alt = v_goals if random.random() > 0.4 else v_goals + 1
     l_goals_alt = l_goals + 1 if random.choice([True, False]) else l_goals
     if l_goals_alt >= v_goals_alt:
@@ -47,7 +44,7 @@ def get_match_prediction(team1, team2):
         
     score_opt2 = f"{v_goals_alt} - {l_goals_alt}"
 
-    # Indice de confiance élite (94% à 99%)
+    # Indice de confiance élite
     reliability = random.randint(94, 99)
 
     return f"""👑 **DIENG PREDICT VIP - ANALYSE EXPERT FC26**
@@ -99,4 +96,4 @@ def main():
     application.run_polling(drop_pending_updates=True)
 
 if __name__ == '__main__':
-main()
+    main()
