@@ -14,7 +14,6 @@ application = Application.builder().token(TOKEN).updater(None).build()
 
 async def handle_message(update: Update, context=None):
     if update.message and update.message.text:
-        # Nettoyage propre du texte
         text = update.message.text.replace('/match', '').replace('/', '').strip()
         
         # Heure locale (GMT)
@@ -23,7 +22,6 @@ async def handle_message(update: Update, context=None):
         
         await update.message.chat.send_action(action="typing")
         
-        # Détermination des équipes
         if " vs " in text.lower():
             teams = text.split(" vs ")
             equipe_1 = teams[0].strip()
@@ -32,19 +30,45 @@ async def handle_message(update: Update, context=None):
             equipe_1 = "Équipe 1"
             equipe_2 = "Équipe 2"
 
-        # Logique d'analyse pro basée sur l'ordre de saisie et la dynamique des tirs au but
-        # On alterne rigoureusement pour éviter le hasard pur
-        if hash(equipe_1 + equipe_2) % 2 == 0:
+        # Génération d'une base numérique unique pour chaque match
+        match_hash = abs(hash(equipe_1.lower() + equipe_2.lower()))
+        random.seed(match_hash)
+
+        # Alternance neutre du vainqueur (plus de favoritisme pour l'équipe à domicile)
+        if match_hash % 2 == 0:
             vainqueur = equipe_1
             perdant = equipe_2
-            analyse_detail = f"Supériorité technique observée dans la gestion des 3 premiers tirs et solidité du portier de {equipe_1} sous haute pression."
         else:
             vainqueur = equipe_2
             perdant = equipe_1
-            analyse_detail = f"Maîtrise tactique supérieure et sang-froid validé lors de la mort subite pour {equipe_2}."
 
-        # Indice de confiance professionnel et dynamique
-        confiance = round(random.uniform(96.2, 99.1), 1)
+        # Variété des scores de tirs au but (fini le 4-3 systématique)
+        possible_scores = [
+            (4, 2), (5, 3), (3, 2), (5, 4), (6, 5), (4, 3), (5, 1)
+        ]
+        score_main = random.choice(possible_scores)
+        score_alt = random.choice(possible_scores)
+        
+        # S'assurer que le vainqueur gagne bien
+        s1, s2 = max(score_main), min(score_main)
+        if s1 == s2: s1 += 1
+        
+        a1, a2 = max(score_alt), min(score_alt)
+        if a1 == a2: a1 += 1
+        if (s1, s2) == (a1, a2):
+            a2 = max(0, a2 - 1)
+
+        # Banque d'analyses tactiques variées et dynamiques
+        analyses_pool = [
+            f"Fermeture des angles par le gardien de {vainqueur} lors des phases de mort subite et manque de sang-froid des tireurs adverses.",
+            f"Maîtrise totale de la pression psychologique et lecture parfaite des trajectoires de tir par {vainqueur}.",
+            f"Domination tactique dans l'exercice des duels 1v1 aux 11 mètres, scellant l'issue avec autorité pour {vainqueur}.",
+            f"Solidité défensive des remparts et efficacité clinique des tireurs clés de {vainqueur} dans le money-time."
+        ]
+        analyse_choisie = random.choice(analyses_pool)
+
+        # Indice de confiance dynamique
+        confiance = round(random.uniform(94.2, 98.8), 1)
 
         response = (
             "🔥 *DIENG PREDICT VIP - ANALYSE EXPERT FC26*\n\n"
@@ -53,10 +77,10 @@ async def handle_message(update: Update, context=None):
             "🏆 *Contexte :* Séance de Penalty (FC26)\n\n"
             "🎯 *1. Verdict & Hiérarchie :* \n"
             f"• **Vainqueur Validé :** {vainqueur} 🏆\n"
-            f"• *Analyse tactique :* {analyse_detail}\n\n"
+            f"• *Analyse tactique :* {analyse_choisie}\n\n"
             "🎯 *2. Scores Exacts Recommandés :* \n"
-            f"• Option 1 (Tendance principale) : **{vainqueur} 4 - 3 {perdant}**\n"
-            f"• Option 2 (Alternative serrée) : **{vainqueur} 5 - 4 {perdant}**\n\n"
+            f"• Option 1 (Tendance principale) : **{vainqueur} {s1} - {s2} {perdant}**\n"
+            f"• Option 2 (Alternative serrée) : **{vainqueur} {a1} - {a2} {perdant}**\n\n"
             f"📊 Indice de Confiance VIP : **{confiance}%**"
         )
         await update.message.reply_text(response, parse_mode="Markdown")
@@ -78,4 +102,4 @@ def index():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port) 
+    app.run(host="0.0.0.0", port=port)
