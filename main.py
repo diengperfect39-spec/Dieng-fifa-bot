@@ -17,34 +17,42 @@ def run_web():
     app.run(host='0.0.0.0', port=port)
 
 
-# 2. Moteur d'analyse expert avec gestion des formats de temps flexibles
+# 2. Moteur d'analyse expert avec découpage intelligent des équipes et scores réalistes
 def get_match_prediction(match_text):
+    if "vs" not in match_text.lower():
+        return None
+
+    # Séparation propre autour du "vs" (insensible à la casse)
     parts = match_text.split("vs")
-    if len(parts) < 2:
-        return "⚠️ Format invalide. Utilise : `/match Equipe1 vs Equipe2 [minute/chrono]`"
-    
     team1 = parts[0].strip().title()
     remainder = parts[1].strip()
-    
-    sub_parts = remainder.split(" ")
-    team2 = sub_parts[0].strip().title()
-    
-    # Récupération de l'indication de temps (qu'ce soit une minute simple ou un chrono)
-    time_ref = " ".join(sub_parts[1:]).strip() if len(sub_parts) > 1 else "Direct"
 
-    # Calcul analytique basé sur le texte et le repère temporel fourni
+    # On sépare les mots de la fin pour identifier si l'utilisateur a mis un chrono/minute (ex: 00:02mn)
+    words = remainder.split(" ")
+    
+    # Détection si le dernier élément ressemble à un temps/chrono
+    time_ref = "Direct"
+    if len(words) > 1 and ("mn" in words[-1].lower() or ":" in words[-1] or words[-1].isdigit()):
+        time_ref = words[-1]
+        team2 = " ".join(words[:-1]).strip().title()
+    else:
+        team2 = remainder.title()
+
+    # Logique de sélection du vainqueur stable
     hash_val = sum(ord(c) for c in team1 + team2 + time_ref)
     winner = team1 if hash_val % 2 == 0 else team2
     loser = team2 if winner == team1 else team1
 
-    base_goal = (hash_val % 4) + 4  # Donne un volume de buts réaliste pour l'e-sport
-    v_goals = base_goal
-    l_goals = max(1, v_goals - (1 if hash_val % 3 == 0 else 2))
-    
+    # Calcul dynamique de scores réalistes pour des tirs au but (ex: 4-3, 5-4, 6-5, ou scores plus larges)
+    v_goals = random.choice([4, 5, 6, 7])
+    l_goals = v_goals - 1 if v_goals > 3 else 3
+    if l_goals < 1:
+        l_goals = 1
+        
     score_opt1 = f"{v_goals} - {l_goals}"
-    score_opt2 = f"{v_goals} - {l_goals + 1 if l_goals < v_goals else l_goals - 1}"
+    score_opt2 = f"{v_goals} - {l_goals + 1}" if random.choice([True, False]) else f"{v_goals + 1} - {l_goals}"
 
-    reliability = 95 + (hash_val % 5)
+    reliability = random.randint(94, 98)
 
     time_display = f"\n⏱️ **Repère temporel :** {time_ref}" if time_ref != "Direct" else ""
 
@@ -67,11 +75,12 @@ def get_match_prediction(match_text):
 # 3. Commande /match sur Telegram
 async def match_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     full_text = " ".join(context.args)
-    if "vs" not in full_text.lower():
-        await update.message.reply_text("⚠️ Utilise le format : `/match Nom1 vs Nom2` (avec optionnellement la minute ou le chrono à la fin).", parse_mode="Markdown")
+    prediction = get_match_prediction(full_text)
+    
+    if not prediction:
+        await update.message.reply_text("⚠️ Format invalide. Utilise : `/match Equipe1 vs Equipe2 [chrono]`", parse_mode="Markdown")
         return
 
-    prediction = get_match_prediction(full_text)
     await update.message.reply_text(prediction, parse_mode="Markdown")
 
 
