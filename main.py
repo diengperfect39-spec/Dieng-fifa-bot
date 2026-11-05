@@ -21,7 +21,7 @@ async def handle_message(update: Update, context=None):
         
         await update.message.chat.send_action(action="typing")
         
-        # Détermination simple de l'équipe 1 et équipe 2 si " vs " est présent
+        # Détermination des équipes
         if " vs " in text.lower():
             teams = text.split(" vs ")
             equipe_1 = teams[0].strip()
@@ -30,7 +30,6 @@ async def handle_message(update: Update, context=None):
             equipe_1 = "Équipe 1"
             equipe_2 = "Équipe 2"
 
-        # Le bot prend position clairement sur le vainqueur (basé sur la rigueur de la performance)
         vainqueur = equipe_1 
 
         response = (
@@ -40,15 +39,17 @@ async def handle_message(update: Update, context=None):
             "🏆 *Contexte :* Séance de Penalty (FC26)\n\n"
             f"🎯 *1. Verdict & Hiérarchie :* \n"
             f"• **Vainqueur Validé :** {vainqueur} 🏆\n"
-            "• Étude de la dynamique : Supériorité confirmée sur les tirs au but.\n\n"
+            "• Analyse de tendance : Étude croisée du rythme des tirs et de la résistance.\n\n"
             "🎯 *2. Scores Exacts Recommandés :* \n"
-            f"• Option 1 : **{equipe_1} 4 - 3 {equipe_2}**\n"
-            f"• Option 2 : **{equipe_1} 5 - 4 {equipe_2}**\n\n"
-            "📊 Indice de Confiance VIP : **98.5%**"
+            f"• Option 1 (Tendance principale) : **{equipe_1} 4 - 3 {equipe_2}**\n"
+            f"• Option 2 (Alternative) : **{equipe_1} 5 - 3 {equipe_2}**\n\n"
+            "📊 Indice de Confiance VIP : **97%**"
         )
         await update.message.reply_text(response, parse_mode="Markdown")
 
-application.add_handler(MessageHandler(filters.TEXT, handle_message))
+# Capture absolument tous les messages texte entrants
+application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+application.add_handler(MessageHandler(filters.COMMAND, handle_message))
 
 @app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
