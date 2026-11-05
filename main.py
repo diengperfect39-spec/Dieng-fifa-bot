@@ -1,7 +1,7 @@
 import os
 import random
 import threading
-from Flask import Flask
+from flask import Flask
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
@@ -19,13 +19,11 @@ def run_web():
 
 # 2. Moteur d'analyse expert avec équilibrage affiné des favoris et outsiders
 def get_match_prediction(team1, team2):
-    # Logique de sélection affinée pour mieux intégrer la résistance des deux équipes
     teams = [team1, team2]
-    # Sélection aléatoire mais pondérée pour éviter les surprises d'outsiders
     winner = random.choice(teams)
     loser = team2 if winner == team1 else team1
     
-    # Calcul dynamique des scores (variables et adaptés aux tirs au but)
+    # Calcul dynamique des scores
     v_goals = random.choice([3, 4, 5, 6])
     l_goals = v_goals - random.choice([1, 2])
     if l_goals < 1:
@@ -33,7 +31,6 @@ def get_match_prediction(team1, team2):
         
     score_opt1 = f"{v_goals} - {l_goals}"
     
-    # Option alternative calculée dynamiquement
     v_goals_alt = v_goals if random.choice([True, False]) else v_goals + 1
     l_goals_alt = l_goals + 1 if random.choice([True, False]) else l_goals
     if l_goals_alt >= v_goals_alt:
@@ -41,7 +38,6 @@ def get_match_prediction(team1, team2):
         
     score_opt2 = f"{v_goals_alt} - {l_goals_alt}"
 
-    # Indice de confiance professionnel
     reliability = random.randint(92, 98)
 
     return f"""👑 **DIENG PREDICT VIP - ANALYSE EXPERT FC26**
