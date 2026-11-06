@@ -12,9 +12,6 @@ TOKEN = os.getenv("TELEGRAM_TOKEN", "9068698544:AAFIhEz56h_fF1L7qNa8_OtRNpCX4Ljj
 bot = Bot(token=TOKEN)
 application = Application.builder().token(TOKEN).updater(None).build()
 
-# Liste noire de mots pour bloquer les tests absurdes
-MOTS_INTERDITS = ["moi", "toi", "test", "bonjour", "salut", "foo", "bar"]
-
 async def handle_message(update: Update, context=None):
     if update.message and update.message.text:
         text = update.message.text.replace('/match', '').replace('/', '').strip()
@@ -29,21 +26,9 @@ async def handle_message(update: Update, context=None):
             teams = text.split(" vs ")
             equipe_1 = teams[0].strip()
             equipe_2 = teams[1].strip()
-            
-            # Vérification si l'utilisateur fait un test absurde (ex: Moi vs Toi)
-            if any(mot in equipe_1.lower() for mot in MOTS_INTERDITS) or any(mot in equipe_2.lower() for mot in MOTS_INTERDITS):
-                await update.message.reply_text(
-                    "⚠️ *DIENG PREDICT VIP - ERREur DE SAISIE*\n\n"
-                    "Veuillez entrer de véritables équipes de football valides (ex: *Real Madrid vs Barcelone*) pour lancer une analyse VIP.",
-                    parse_mode="Markdown"
-                )
-                return
         else:
-            await update.message.reply_text(
-                "⚠️ *Format incorrect.*\nUtilisez le format : `Équipe 1 vs Équipe 2`",
-                parse_mode="Markdown"
-            )
-            return
+            equipe_1 = "Équipe 1"
+            equipe_2 = "Équipe 2"
 
         # Clé de calcul rigoureuse et objective
         seed_value = len(equipe_1) * 3 + len(equipe_2) * 5 + int(current_time_str.replace(":", ""))
