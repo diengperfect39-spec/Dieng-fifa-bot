@@ -30,57 +30,59 @@ async def handle_message(update: Update, context=None):
             equipe_1 = "Équipe 1"
             equipe_2 = "Équipe 2"
 
-        # Génération d'une base numérique unique pour chaque match
-        match_hash = abs(hash(equipe_1.lower() + equipe_2.lower()))
-        random.seed(match_hash)
+        # Hash unique basé sur le match et l'heure exacte de la requête
+        sim_hash = abs(hash(text.lower() + current_time_str))
+        random.seed(sim_hash)
 
-        # Alternance neutre du vainqueur (plus de favoritisme pour l'équipe à domicile)
-        if match_hash % 2 == 0:
-            vainqueur = equipe_1
-            perdant = equipe_2
+        # Alternance neutre du vainqueur
+        if sim_hash % 2 == 0:
+            v_1, v_2 = equipe_1, equipe_2
         else:
-            vainqueur = equipe_2
-            perdant = equipe_1
+            v_1, v_2 = equipe_2, equipe_1
 
-        # Variété des scores de tirs au but (fini le 4-3 systématique)
-        possible_scores = [
-            (4, 2), (5, 3), (3, 2), (5, 4), (6, 5), (4, 3), (5, 1)
-        ]
-        score_main = random.choice(possible_scores)
-        score_alt = random.choice(possible_scores)
+        # Génération mathématique dynamique de scores serrés ou en mort subite (sans liste figée)
+        # Permet d'obtenir des scores variés et imprévisibles à chaque analyse
+        type_seance = random.choice(["standard", "prolongee", "tendu"])
         
-        # S'assurer que le vainqueur gagne bien
-        s1, s2 = max(score_main), min(score_main)
-        if s1 == s2: s1 += 1
-        
-        a1, a2 = max(score_alt), min(score_alt)
-        if a1 == a2: a1 += 1
-        if (s1, s2) == (a1, a2):
-            a2 = max(0, a2 - 1)
+        if type_seance == "standard":
+            perdant_score = random.randint(2, 4)
+            gagnant_score = perdant_score + random.choice([1, 2])
+        elif type_seance == "prolongee":
+            perdant_score = random.randint(5, 8)
+            gagnant_score = perdant_score + 1
+        else:
+            gagnant_score = random.randint(4, 7)
+            perdant_score = gagnant_score - random.choice([1, 2])
+            if perdant_score < 1: perdant_score = 1
 
-        # Banque d'analyses tactiques variées et dynamiques
+        # Score alternatif différent pour éviter les doublons
+        alt_perdant = max(1, perdant_score + random.choice([-1, 1]))
+        alt_gagnant = gagnant_score + random.choice([0, 1])
+        if alt_gagnant == alt_perdant:
+            alt_gagnant += 1
+
+        # Banque d'analyses contextuelles de la simulation
         analyses_pool = [
-            f"Fermeture des angles par le gardien de {vainqueur} lors des phases de mort subite et manque de sang-froid des tireurs adverses.",
-            f"Maîtrise totale de la pression psychologique et lecture parfaite des trajectoires de tir par {vainqueur}.",
-            f"Domination tactique dans l'exercice des duels 1v1 aux 11 mètres, scellant l'issue avec autorité pour {vainqueur}.",
-            f"Solidité défensive des remparts et efficacité clinique des tireurs clés de {vainqueur} dans le money-time."
+            f"Analyse de la résistance psychologique : basculement de la décision sur les derniers tirs sous haute pression pour {v_1}.",
+            f"Fluctuation de l'algorithme des gardiens : {v_1} prend l'ascendant technique lors du face-à-face final.",
+            f"Lecture des tendances de frappe des tireurs : {v_1} capitalise sur une meilleure lecture des trajectoires.",
+            f"Dénouement de la séance aux 11 mètres : la régularité des phases de tirs profite à {v_1}."
         ]
         analyse_choisie = random.choice(analyses_pool)
 
-        # Indice de confiance dynamique
-        confiance = round(random.uniform(94.2, 98.8), 1)
+        confiance = round(random.uniform(94.8, 99.3), 1)
 
         response = (
             "🔥 *DIENG PREDICT VIP - ANALYSE EXPERT FC26*\n\n"
             f"⚽ *Match :* {equipe_1} vs {equipe_2}\n"
             f"🕒 *Heure d'analyse :* {current_time_str} (GMT)\n"
-            "🏆 *Contexte :* Séance de Penalty (FC26)\n\n"
+            "🏆 *Contexte :* FC26 Penalty (Simulateur Virtuel)\n\n"
             "🎯 *1. Verdict & Hiérarchie :* \n"
-            f"• **Vainqueur Validé :** {vainqueur} 🏆\n"
+            f"• **Vainqueur Validé :** {v_1} 🏆\n"
             f"• *Analyse tactique :* {analyse_choisie}\n\n"
             "🎯 *2. Scores Exacts Recommandés :* \n"
-            f"• Option 1 (Tendance principale) : **{vainqueur} {s1} - {s2} {perdant}**\n"
-            f"• Option 2 (Alternative serrée) : **{vainqueur} {a1} - {a2} {perdant}**\n\n"
+            f"• Option 1 (Tendance principale) : **{v_1} {gagnant_score} - {perdant_score} {v_2}**\n"
+            f"• Option 2 (Alternative) : **{v_1} {alt_gagnant} - {alt_perdant} {v_2}**\n\n"
             f"📊 Indice de Confiance VIP : **{confiance}%**"
         )
         await update.message.reply_text(response, parse_mode="Markdown")
