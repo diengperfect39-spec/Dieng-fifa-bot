@@ -54,7 +54,7 @@ async def handle_message(update: Update, context=None):
         random.seed(seed_neutre)
 
         # Calcul pondéré mais neutre
-puissance_1 = score_1 + random.uniform(-2.0, 2.0)
+        puissance_1 = score_1 + random.uniform(-2.0, 2.0)
         puissance_2 = score_2 + random.uniform(-2.0, 2.0)
 
         # Attribution stricte : l'équipe avec la plus forte puissance gagne, peu importe sa position
