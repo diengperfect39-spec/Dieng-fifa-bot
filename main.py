@@ -5,7 +5,6 @@ from flask import Flask, request as flask_request
 from telegram import Bot, Update
 from telegram.ext import Application, MessageHandler, filters
 
-app.parse = Flask(__name__)
 app = Flask(__name__)
 
 TOKEN = os.getenv("TELEGRAM_TOKEN", "TON_BOT_TOKEN")
@@ -31,7 +30,7 @@ async def handle_message(update: Update, context=None):
             equipe_1 = "Équipe 1"
             equipe_2 = "Équipe 2"
 
-        # Clé de calcul stricte et objective basée sur l'intitulé de la rencontre
+        # Clé de calcul rigoureuse et objective basée sur l'intitulé de la rencontre
         match_key = len(equipe_1) * 3 + len(equipe_2) * 7 + int(current_time_str.replace(":", ""))
         random.seed(match_key)
 
