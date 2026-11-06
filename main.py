@@ -12,10 +12,10 @@ TOKEN = os.getenv("TELEGRAM_TOKEN", "9068698544:AAFIhEz56h_fF1L7qNa8_OtRNpCX4Ljj
 bot = Bot(token=TOKEN)
 application = Application.builder().token(TOKEN).updater(None).build()
 
-# Matrice de base équilibrée pour laisser toute sa place aux surprises et aux outsiders
+# Matrice de base équilibrée pour les performances FC26 Penalty
 COEFFS_BASE = {
     "real madrid": 92, "barcelone": 92, "manchester city": 91, "bayern munich": 90,
-    "arsenal": 89, "liverpool": 89, "juventus": 87, "psg": 87, 
+    "arsenal": 89, "liverpool": 89, "juventus": 87, "psg": 87, "paris saint-germain": 87, 
     "dortmund": 86, "milan": 86, "inter": 86, "chelsea": 85, "atletico": 84, 
     "napoli": 84, "roma": 83, "marseille": 82, "ajax": 82, "inter miami": 81, "al nassr": 80
 }
@@ -52,14 +52,14 @@ async def handle_message(update: Update, context=None):
         seed_stabilité = sum(ord(c) for nom in noms_tries for c in nom) + int(current_time_str.replace(":", ""))
         random.seed(seed_stabilité)
 
-        # FACTEUR DE FORME DU JOUR (Permet aux outsiders de créer la surprise et évite l'effet "Real/Barça gagnent toujours")
+        # FACTEUR DE FORME DU JOUR (Permet aux outsiders de créer la surprise)
         forme_a = random.uniform(-4.5, 4.5)
         forme_b = random.uniform(-4.5, 4.5)
 
         p_a = base_a + forme_a
         p_b = base_b + forme_b
 
-        # Désignation du vainqueur basée sur la forme du jour (neutre et indépendante de l'ordre)
+        # Désignation du vainqueur basée sur la forme du jour
         if p_a >= p_b:
             vainqueur = eq_a
             perdant = eq_b
@@ -86,13 +86,19 @@ async def handle_message(update: Update, context=None):
         else:
             marche_total = "Option Recommandée : Plus de 6.5 buts (Séance rythmée attendue)"
 
-        # Marchés supplémentaires (Total Pair & Pénalties manqués)
-        choix_pair = random.choice(["Non (Tendance majoritaire sur les stats de tirs)", "Oui (Volatilité observée sur cette tranche)"])
-        penalties_manques = random.choice([
-            "Plus de 2.5 Pénalties manqués (Pression accrue sur les gardiens)", 
-            "Moins de 2.5 Pénalties manqués (Efficacité remarquable des tireurs)",
-            "Moins de 3.5 Pénalties manqués (Maîtrise globale des duels)"
-        ])
+        # CORRECTION LOGIQUE : Le Total Pair est déduit mathématiquement du score exact pour zéro incohérence
+        if total_buts % 2 == 0:
+            choix_pair = f"Oui ({total_buts} buts au total - Cohérence mathématique validée)"
+        else:
+            choix_pair = f"Non ({total_buts} buts au total - Cohérence mathématique validée)"
+
+        # Analyse des pénalties manqués liée à la structure du score
+        if total_buts >= 10:
+            penalties_manques = "Plus de 3.5 Pénalties manqués (Forte nervosité en mort subite)"
+        elif total_buts == 9:
+            penalties_manques = "Plus de 2.5 Pénalties manqués (Pression accrue sur les gardiens)"
+        else:
+            penalties_manques = "Moins de 2.5 Pénalties manqués (Efficacité remarquable des tireurs)"
 
         confiance = round(97.5 + min(abs(ecart) * 0.3, 2.0), 1)
 
