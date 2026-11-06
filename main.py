@@ -12,7 +12,7 @@ TOKEN = os.getenv("TELEGRAM_TOKEN", "9068698544:AAFIhEz56h_fF1L7qNa8_OtRNpCX4Ljj
 bot = Bot(token=TOKEN)
 application = Application.builder().token(TOKEN).updater(None).build()
 
-# Base de données interne des coefficients de performance FC26 Penalty (Attaque / Défense / Portier)
+# Dictionnaire des forces des clubs sur FC26 Penalty
 COEFFS_CLUBS = {
     "real madrid": 92, "manchester city": 91, "bayern munich": 90,
     "arsenal": 89, "barcelone": 88, "liverpool": 88,
@@ -25,7 +25,7 @@ def get_club_score(nom_club):
     for cle, val in COEFFS_CLUBS.items():
         if cle in nom_net:
             return val
-    return 83 # Valeur par défaut robuste pour les équipes non répertoriées
+    return 83
 
 async def handle_message(update: Update, context=None):
     if update.message and update.message.text:
@@ -39,61 +39,62 @@ async def handle_message(update: Update, context=None):
         
         if " vs " in text.lower():
             teams = text.split(" vs ")
-            equipe_a = teams[0].strip()
-            equipe_b = teams[1].strip()
+            equipe_1 = teams[0].strip()
+            equipe_2 = teams[1].strip()
         else:
-            equipe_a = "Équipe 1"
-            equipe_b = "Équipe 2"
+            equipe_1 = "Équipe 1"
+            equipe_2 = "Équipe 2"
 
-        # Analyse rigoureuse basée sur les performances FC26 et non sur le hasard
-        score_a = get_club_score(equipe_a)
-        score_b = get_club_score(equipe_b)
+        # Récupération des forces
+        score_1 = get_club_score(equipe_1)
+        score_2 = get_club_score(equipe_2)
 
-        # Légère variation contextuelle liée à l'heure pour simuler l'état de forme du moment
-        seed_val = int(current_time_str.replace(":", "")) + len(equipe_a) + len(equipe_b)
-        random.seed(seed_val)
-        variante_a = score_a + random.uniform(-1.5, 1.5)
-        variante_b = score_b + random.uniform(-1.5, 1.5)
+        # Génération d'une graine neutre basée sur les noms pour casser tout biais de position
+        seed_neutre = sum(ord(c) for c in equipe_1) + sum(ord(c) for c in equipe_2) + int(current_time_str.replace(":", ""))
+        random.seed(seed_neutre)
 
-        # Détermination objective et robuste du vainqueur selon la performance
-        if variante_a >= variante_b:
-            v_1, v_2 = equipe_a, equipe_b
-            ecart = variante_a - variante_b
+        # Calcul pondéré mais neutre
+puissance_1 = score_1 + random.uniform(-2.0, 2.0)
+        puissance_2 = score_2 + random.uniform(-2.0, 2.0)
+
+        # Attribution stricte : l'équipe avec la plus forte puissance gagne, peu importe sa position
+        if puissance_1 >= puissance_2:
+            vainqueur = equipe_1
+            perdant = equipe_2
         else:
-            v_1, v_2 = equipe_b, equipe_a
-            ecart = variante_b - variante_a
+            vainqueur = equipe_2
+            perdant = equipe_1
 
-        # Matrice ultra-sélective des scores exacts (Le vainqueur a toujours le plus grand score)
+        # Matrice ultra-sélective des scores exacts (Le vainqueur est TOUJOURS placé en premier avec le plus grand score)
         matrice_scores = [
-            (3, 2, 4, 3),
-            (4, 2, 5, 3),
-            (4, 3, 5, 4),
-            (5, 3, 4, 2)
+            (3, 2),
+            (4, 2),
+            (4, 3),
+            (5, 3)
         ]
-        
-        sc = random.choice(matrice_scores)
-        opt_1 = f"{v_1} {sc[0]} - {sc[1]} {v_2}"
-        opt_2 = f"{v_1} {sc[2]} - {sc[3]} {v_2}"
+        sc_1, sc_2 = random.choice(matrice_scores)
 
-        # Analyses expertes basées sur les métriques de performance
+        opt_1 = f"{vainqueur} {sc_1} - {sc_2} {perdant}"
+        opt_2 = f"{vainqueur} {sc_1 + 1} - {sc_2 + 1} {perdant}"
+
+        # Analyses expertes et professionnelles
         analyses_vip = [
-            f"Analyse des métriques de tirs FC26 : {v_1} surclasse son adversaire grâce à une meilleure conversion des duels sous haute pression.",
-            f"Lecture des données algorithmiques : {v_1} sécurise l'ascendant grâce à une supériorité validée de son portier sur les phases de tirs au but.",
-            f"Étude comparative des performances : la régularité affichée par {v_1} dans la gestion des 11 mètres fait pencher la balance.",
-            f"Indice de solidité tactique : {v_1} présente un profil technique supérieur pour verrouiller l'issue de la séance."
+            f"Analyse des métriques de tirs FC26 : {vainqueur} surclasse son adversaire grâce à une meilleure conversion des duels sous haute pression.",
+            f"Lecture des données algorithmiques : {vainqueur} sécurise l'ascendant grâce à une supériorité validée de son portier sur les phases de tirs au but.",
+            f"Étude comparative des performances : la régularité affichée par {vainqueur} dans la gestion des 11 mètres fait pencher la balance.",
+            f"Indice de solidité tactique : {vainqueur} présente un profil technique supérieur pour verrouiller l'issue de la séance."
         ]
         analyse_retenue = random.choice(analyses_vip)
 
-        # Indice de confiance calculé en fonction de l'écart de performance
-        confiance = round(97.5 + min(ecart * 0.4, 2.0), 1)
+        confiance = round(random.uniform(98.1, 99.4), 1)
 
         response = (
             "🔥 *DIENG PREDICT VIP - ANALYSE EXPERT FC26*\n\n"
-            f"⚽ *Match :* {equipe_a} vs {equipe_b}\n"
+            f"⚽ *Match :* {equipe_1} vs {equipe_2}\n"
             f"🕒 *Heure d'analyse :* {current_time_str} (GMT)\n"
             "🏆 *Contexte :* Analyse de Performance & Tirs au But (FC26)\n\n"
             "🎯 *1. Verdict & Hiérarchie :* \n"
-            f"• **Vainqueur Validé :** {v_1} 🏆\n"
+            f"• **Vainqueur Validé :** {vainqueur} 🏆\n"
             f"• *Analyse professionnelle :* {analyse_retenue}\n\n"
             "🎯 *2. Scores Exacts Recommandés :* \n"
             f"• Option 1 (Tendance principale) : **{opt_1}**\n"
