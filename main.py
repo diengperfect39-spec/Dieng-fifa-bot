@@ -1,4 +1,3 @@
-import os
 import hashlib
 import requests
 from fastapi import FastAPI, Request
