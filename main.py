@@ -17,6 +17,8 @@ def home():
 @app.route(f'/{TOKEN}', methods=['POST'])
 def webhook():
     data = request.get_json()
+    print("Données reçues de Telegram :", data) # Pour voir dans les logs Render
+    
     if data and "message" in data:
         msg = data["message"]
         chat_id = msg["chat"]["id"]
@@ -68,11 +70,10 @@ def webhook():
                 f"📊 **Confiance VIP :** 98.5%\n"
             )
             
-            requests.post(f"{URL}/sendMessage", json={"chat_id": chat_id, "text": out, "parse_mode": "Markdown"})
+            res = requests.post(f"{URL}/sendMessage", json={"chat_id": chat_id, "text": out, "parse_mode": "Markdown"})
+            print("Réponse Telegram envoyée :", res.text)
             
     return jsonify({"status": "ok"})
 
 if __name__ == '__main__':
-    requests.get(f"{URL}/deleteWebhook?drop_pending_updates=true")
-    requests.post(f"{URL}/setWebhook", json={"url": f"{RENDER_URL}/{TOKEN}"})
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 10000)))
