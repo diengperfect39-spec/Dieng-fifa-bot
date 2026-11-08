@@ -1,5 +1,4 @@
 import hashlib
-import os
 import requests
 from fastapi import FastAPI, Request
 
@@ -15,27 +14,28 @@ def home():
 async def telegram_webhook(request: Request):
     try:
         data = await request.json()
+        print("Données reçues de Telegram :", data)
         
         if "message" in data:
             chat_id = data["message"]["chat"]["id"]
             text_recu = data["message"].get("text", "").strip()
             
-            match_info = "Barcelone vs Arsenal"
+            match_info = "Barcelone vs Inter Miami"
             if text_recu and not text_recu.startswith("/"):
                 match_info = text_recu
                 
-            # Découpage intelligent et propre des équipes
+            # Découpage propre et sécurisé des équipes
             parties = [p.strip() for p in match_info.split("vs")] if "vs" in match_info else [match_info, "Visiteur"]
             eq1 = parties[0]
             eq2 = parties[1] if len(parties) > 1 else "Visiteur"
             
-            # Empreinte cryptographique stable pour lier l'analyse au match
+            # Empreinte cryptographique stable
             hash_bytes = hashlib.sha256(match_info.encode()).digest()
             v1 = hash_bytes[0]
             v2 = hash_bytes[1]
             v3 = hash_bytes[2]
             
-            # Matrice de scénarios réalistes basée sur les tirs au but FC26
+            # Matrice de scénarios réalistes (scores serrés et logiques de penalties)
             bibliotheque_scenarios = [
                 {"s1": 2, "s2": 3, "gagnant": eq2, "total": "Plus de 4.5 buts", "paire": "Non", "Penalties": "Moins de 2.5 manqués"},
                 {"s1": 3, "s2": 4, "gagnant": eq2, "total": "Plus de 6.5 buts", "paire": "Non", "Penalties": "Plus de 2.5 manqués"},
@@ -70,11 +70,13 @@ async def telegram_webhook(request: Request):
                 f"📈 **Indice de Confiance VIP :** {indice_confiance:.1f}%"
             )
             
-            requests.post(
+            response = requests.post(
                 f"https://api.telegram.org/bot{TOKEN}/sendMessage",
                 json={"chat_id": chat_id, "text": analysis_text, "parse_mode": "Markdown"}
             )
+            print("Réponse de Telegram :", response.text)
+            
     except Exception as e:
-        print(e)
+        print("Erreur critique dans le webhook :", str(e))
         
     return {"ok": True}
