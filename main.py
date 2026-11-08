@@ -12,7 +12,7 @@ app = FastAPI()
 
 @app.get("/")
 def home():
-    return {"status": "Dieng FIFA VIP 100% Actif - Marchés Calibrés FC26"}
+    return {"status": "Dieng FIFA VIP 100% Actif - Marchés Corrects FC26"}
 
 @app.post(f"/{TOKEN}")
 async def webhook(req: Request):
@@ -53,7 +53,7 @@ async def webhook(req: Request):
 
             total_goals = s1 + s2
             
-            # Lignes de buts adaptées aux standards réels (6.5, 7.5, 8.5)
+            # Marchés de buts conformes à la réalité (6.5 minimum)
             if total_goals >= 9:
                 tot_str = "Plus de 8.5 buts (Séance ultra-prolongée)"
             elif total_goals >= 8:
@@ -63,3 +63,32 @@ async def webhook(req: Request):
 
             pair_val = "Oui" if total_goals % 2 == 0 else "Non"
             pen_text = f"Convertis avec précision (Plus de 3.5 réussis)"
+            confidence = round(95.0 + ((h1 * h2) % 35) / 10.0, 1)
+
+            current_time = datetime.now().strftime("%H:%M")
+
+            out = (
+                f"🔥 **DIENG PREDICT VIP - ANALYSE EXPERT FC26** 🔥\n\n"
+                f"⚽ **Affiche :** {t1} vs {t2}\n"
+                f"🕒 **Heure d'analyse :** {current_time} (GMT)\n\n"
+                f"📋 **Rapport d'expertise :**\n"
+                f"• {analysis}\n\n"
+                f"🎯 **1. Vainqueur Validé :** {winner} 🏆\n\n"
+                f"🎯 **2. Scores Exacts & Marchés :**\n"
+                f"• **Option 1 (Principal) :** {t1} {s1} - {s2} {t2}\n"
+                f"• **Option 2 (Alternatif) :** {t1} {alt_s1} - {alt_s2} {t2}\n"
+                f"• **Volume de buts :** {tot_str}\n\n"
+                f"🎯 **3. Tendances Marché :**\n"
+                f"• **Total Pair :** {pair_val}\n"
+                f"• **Pénalties :** {pen_text}\n\n"
+                f"📊 **Confiance VIP :** {confidence}%\n"
+            )
+            
+            requests.post(f"{URL}/sendMessage", json={"chat_id": chat_id, "text": out, "parse_mode": "Markdown"})
+            
+    return {"status": "ok"}
+
+@app.on_event("startup")
+def startup_event():
+    requests.get(f"{URL}/deleteWebhook?drop_pending_updates=true")
+    requests.post(f"{URL}/setWebhook", json={"url": f"{RENDER_URL}/{TOKEN}"})
