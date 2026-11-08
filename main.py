@@ -5,6 +5,15 @@ from fastapi import FastAPI, Request
 app = FastAPI()
 
 TOKEN = "8810400712:AAE2nrvEaFseAFGfEkv57nDDVgJtNPJxrOg"
+RENDER_URL = "https://dieng-fifa-bot.onrender.com/"
+
+@app.on_event("startup")
+def startup_event():
+    # Enregistrement automatique du webhook au démarrage du serveur
+    try:
+        requests.get(f"https://api.telegram.org/bot{TOKEN}/setWebhook?url={RENDER_URL}")
+    except Exception as e:
+        print("Erreur webhook auto:", str(e))
 
 @app.get("/")
 def home():
