@@ -46,6 +46,4 @@ async def webhook(req: Request):
                 alt_s1, alt_s2 = 7, 6
                 analysis_tone = f"Séance ultra-offensive et spectaculaire : les deux équipes se livrent un duel de haute volée, avec un avantage décisif pour {t1} dans les derniers tirs."
             else:
-                base_s1, base_s2 = 5, 7
-                alt_s1, alt_s2 = 4, 6
-                analysis_tone = f"Festival offensif sous haute pression : {t2} surclasse totalement {t1
+                base_s1, base_s2
