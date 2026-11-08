@@ -12,7 +12,7 @@ app = FastAPI()
 
 @app.get("/")
 def home():
-    return {"status": "Dieng FIFA VIP 100% Actif - Analyse Avancée FC26"}
+    return {"status": "Dieng FIFA VIP 100% Actif - Mode Penalty Pro & Nuls"}
 
 @app.post(f"/{TOKEN}")
 async def webhook(req: Request):
@@ -26,55 +26,48 @@ async def webhook(req: Request):
             parts = [p.strip() for p in txt.split("vs")] if "vs" in txt else [txt, "Visiteur"]
             t1, t2 = parts[0], parts[1] if len(parts) > 1 else "Visiteur"
             
-            # Hash indépendant pour chaque équipe pour obtenir de vraies variations uniques
             h1 = int(hashlib.md5(t1.encode()).hexdigest(), 16)
             h2 = int(hashlib.md5(t2.encode()).hexdigest(), 16)
             
-            # Calcul dynamique et indépendant des scores (plages réalistes de penalties : 3 à 6 buts)
-            score1 = 3 + (h1 % 3)  # Donne entre 3 et 5
-            score2 = 3 + (h2 % 3)  # Donne entre 3 et 5
+            # Détermination intelligente du scénario (Victoire T1, Victoire T2 ou Match Nul)
+            scenario = (h1 + h2) % 5
             
-            # Éviter les égalités parfaites ennuyeuses
-            if score1 == score2:
-                score1 += 1
-
-            # Détermination du vainqueur selon la vraie force relative des hashes
-            if h1 > h2:
+            if scenario == 0:
+                # Match Nul serré
+                s_t1, s_t2 = 4, 4
+                alt_t1, alt_t2 = 5, 5
+                winner = "Match Nul (Équilibre parfait)"
+                analysis = f"Neutralisation parfaite entre {t1} et {t2} qui se neutralisent dans l'exercice des tirs au but."
+            elif scenario == 1:
+                # Match Nul prolifique
+                s_t1, s_t2 = 5, 5
+                alt_t1, alt_t2 = 4, 4
+                winner = "Match Nul (Partage des points)"
+                analysis = f"Duel extrêmement accroché où {t1} et {t2} font preuve d'une efficacité strictement identique."
+            elif scenario == 2:
+                # Victoire T1
+                s_t1, s_t2 = 5, 4
+                alt_t1, alt_t2 = 4, 3
                 winner = t1
-                if score1 < score2:
-                    score1, score2 = score2, score1
-                s1, s2 = score1, score2
-                alt_s1, alt_s2 = max(3, s1 - 1), s2 + 1 if s2 < 5 else s2 - 1
-                analysis = f"Supériorité tactique et meilleure gestion des tirs au but par {t1} face à {t2}."
-            else:
-                winner = t2
-                if score2 < score1:
-                    score1, score2 = score2, score1
-                s1, s2 = score2, score1  # Inversion pour que l'équipe 2 gagne si c'est elle la vainqueure
-                # Ajustement propre pour le format T1 vs T2
-                # On s'assure que s1 est pour t1 et s2 pour t2, mais si t2 gagne, s2 > s1
-                pass
-
-            # Recalibrage propre pour garantir la victoire du bon vainqueur affiché
-            if h1 > h2:
+                analysis = f"Supériorité technique et sang-froid supérieur de {t1} pour s'imposer face à {t2}."
+            elif scenario == 3:
+                # Victoire T1 large
+                s_t1, s_t2 = 4, 2
+                alt_t1, alt_t2 = 5, 3
                 winner = t1
-                s_t1 = max(score1, score2)
-                s_t2 = min(score1, score2)
-                if s_t1 == s_t2: s_t1 += 1
-                alt_t1, alt_t2 = max(3, s_t1 - 1), s_t2
-                analysis = f"Assurance technique et solidité de {t1} pour contenir les offensives de {t2}."
+                analysis = f"Maîtrise tactique et solidité défensive de {t1} pour verrouiller l'écart face à {t2}."
             else:
+                # Victoire T2
+                s_t1, s_t2 = 3, 5
+                alt_t1, alt_t2 = 4, 5
                 winner = t2
-                s_t2 = max(score1, score2)
-                s_t1 = min(score1, score2)
-                if s_t1 == s_t2: s_t2 += 1
-                alt_t1, alt_t2 = s_t1, max(3, s_t2 - 1)
-                analysis = f"Forte intensité et renversement de situation orchestré par {t2} pour dominer {t1}."
+                analysis = f"Renversement de situation et efficacité redoutable de {t2} pour surprendre {t1}."
 
             total_goals = s_t1 + s_t2
             
-            # Volumes de buts conformes aux marchés du jeu
-            if total_goals >= 9:
+            if total_goals >= 10:
+                tot_str = "Plus de 9.5 buts (Séance historique)"
+            elif total_goals >= 9:
                 tot_str = "Plus de 8.5 buts (Séance ultra-prolongée)"
             elif total_goals >= 8:
                 tot_str = "Plus de 7.5 buts (Forte intensité en mort subite)"
@@ -93,7 +86,7 @@ async def webhook(req: Request):
                 f"🕒 **Heure d'analyse :** {current_time} (GMT)\n\n"
                 f"📋 **Rapport d'expertise :**\n"
                 f"• {analysis}\n\n"
-                f"🎯 **1. Vainqueur Validé :** {winner} 🏆\n\n"
+                f"🎯 **1. Issue Validée :** {winner} 🏆\n\n"
                 f"🎯 **2. Scores Exacts & Marchés :**\n"
                 f"• **Option 1 (Principal) :** {t1} {s_t1} - {s_t2} {t2}\n"
                 f"• **Option 2 (Alternatif) :** {t1} {alt_t1} - {alt_t2} {t2}\n"
