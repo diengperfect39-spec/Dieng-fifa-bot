@@ -1,4 +1,5 @@
 import hashlib
+import os
 import requests
 from fastapi import FastAPI, Request
 
@@ -24,7 +25,7 @@ async def telegram_webhook(request: Request):
                 match_info = text_recu
                 
             # Découpage intelligent et propre des équipes
-            parties = [p.strip() for p in match_info.split("vs")] if "vs" in match_info else [match_info, "Adversaire"]
+            parties = [p.strip() for p in match_info.split("vs")] if "vs" in match_info else [match_info, "Visiteur"]
             eq1 = parties[0]
             eq2 = parties[1] if len(parties) > 1 else "Visiteur"
             
