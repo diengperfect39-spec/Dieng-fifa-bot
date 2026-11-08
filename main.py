@@ -44,26 +44,27 @@ async def telegram_webhook(request: Request):
                 confiance = 97.8 + (v3 % 19) / 10
 
                 analysis_text = (
-                    f"🔥 **DIENG PREDICT VIP - ANALYSE EXPERT FC26** 🔥\n\n"
-                    f"⚽ **Match :** {eq1} vs {eq2}\n"
-                    f"🏆 **Contexte :** Analyse Dynamique & Forme des Tirs au But\n\n"
-                    f"🎯 **1. Verdict & Hiérarchie :**\n"
-                    f"• Vainqueur Validé : **{choix['gagnant']}** 🏆\n"
-                    f"• Analyse : Stabilité des frappes et gestion de la pression en fin de série.\n\n"
-                    f"📋 **2. Scores Exacts & Marchés Clés :**\n"
-                    f"• Option 1 (Principal) : **{eq1} {choix['s1']} - {choix['s2']} {eq2}**\n"
-                    f"• Option 2 (Alternatif) : **{eq1} {alt_s1} - {alt_s2} {eq2}**\n"
-                    f"• Volume de buts : **{choix['total']}**\n\n"
-                    f"📊 **3. Tendances Marché :**\n"
-                    f"• Total Pair : **{choix['paire']}**\n"
-                    f"• Penalties : **{choix['pen']}**\n\n"
-                    f"📈 **Indice de Confiance VIP :** {confiance:.1f}%"
+                    f"DIENG PREDICT VIP - ANALYSE EXPERT FC26\n\n"
+                    f"Match : {eq1} vs {eq2}\n"
+                    f"Contexte : Analyse Dynamique & Forme des Tirs au But\n\n"
+                    f"1. Verdict & Hierarchie :\n"
+                    f"- Vainqueur Valide : {choix['gagnant']}\n"
+                    f"- Analyse : Stabilite des frappes et gestion de la pression.\n\n"
+                    f"2. Scores Exacts & Marches Cles :\n"
+                    f"- Option 1 (Principal) : {eq1} {choix['s1']} - {choix['s2']} {eq2}\n"
+                    f"- Option 2 (Alternatif) : {eq1} {alt_s1} - {alt_s2} {eq2}\n"
+                    f"- Volume de buts : {choix['total']}\n\n"
+                    f"3. Tendances Marche :\n"
+                    f"- Total Pair : {choix['paire']}\n"
+                    f"- Penalties : {choix['pen']}\n\n"
+                    f"Indice de Confiance VIP : {confiance:.1f}%"
                 )
                 
-                requests.post(
+                resp = requests.post(
                     f"https://api.telegram.org/bot{TOKEN}/sendMessage",
-                    json={"chat_id": chat_id, "text": analysis_text, "parse_mode": "Markdown"}
+                    json={"chat_id": chat_id, "text": analysis_text}
                 )
+                print("Reponse Telegram:", resp.text)
     except Exception as e:
         print("Erreur:", str(e))
         
