@@ -1,19 +1,20 @@
 import hashlib
 import requests
-from flask import Flask, request, jsonify
+from fastapi import FastAPI, Request
 
-app = Flask(__name__)
+app = FastAPI()
 
 TOKEN = "9204768032:AAGdCe7c_tym2R6zyug8jtx33P9gC4wpZx4"
 
-@app.route("/", methods=["GET", "POST"])
-def webhook():
-    if request.method == "GET":
-        return {"status": "FIFA VIP Pro Active"}
-    
+@app.get("/")
+def home():
+    return {"status": "FIFA VIP Pro Active"}
+
+@app.post("/")
+async def telegram_webhook(request: Request):
     try:
-        data = request.get_json(force=True)
-        if data and "message" in data:
+        data = await request.json()
+        if "message" in data:
             chat_id = data["message"]["chat"]["id"]
             text_recu = data["message"].get("text", "").strip()
             
@@ -65,7 +66,4 @@ def webhook():
     except Exception as e:
         print("Erreur:", str(e))
         
-    return jsonify({"ok": True})
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    return {"ok": True}
