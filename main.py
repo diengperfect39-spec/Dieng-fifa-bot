@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request
 
 app = FastAPI()
 
-TOKEN = "9204768032:AAGdCe7c_tym2R6zyug8jtx33P9gC4wpZx4"
+TOKEN = "8810400712:AAE2nrvEaFseAFGfEkv57nDDVgJtNPJxrOg"
 
 @app.get("/")
 def home():
