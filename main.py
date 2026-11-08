@@ -6,6 +6,7 @@ from flask import Flask, request, jsonify
 
 TOKEN = "9191245417:AAGcmBNQNwsUJTUcM6G72TfQhtGAMTB9KDo"
 URL = f"https://api.telegram.org/bot{TOKEN}"
+RENDER_URL = "https://dieng-fifa-bot.onrender.com"
 
 app = Flask(__name__)
 
@@ -80,5 +81,6 @@ def webhook():
     return jsonify({"status": "ok"})
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port)
+    requests.get(f"{URL}/deleteWebhook?drop_pending_updates=true")
+    requests.post(f"{URL}/setWebhook", json={"url": f"{RENDER_URL}/{TOKEN}"})
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 10000)))
