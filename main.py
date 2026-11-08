@@ -4,7 +4,7 @@ import requests
 from datetime import datetime
 from fastapi import FastAPI, Request
 
-TOKEN = "9191245417:AAGcmBNQNwsUJTUcM6G72TfQhtGAMTB9KDo"
+TOKEN = "9068698544:AAFIhEz56h_fF1L7qNa8_OtRNpCX4LjjQrU"
 URL = f"https://api.telegram.org/bot{TOKEN}"
 RENDER_URL = "https://dieng-fifa-bot.onrender.com"
 
