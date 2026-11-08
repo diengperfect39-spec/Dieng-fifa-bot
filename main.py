@@ -5,6 +5,15 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 TOKEN = "8810400712:AAE2nrvEaFseAFGfEkv57nDDVgJtNPJxrOg"
+RENDER_URL = "https://dieng-fifa-bot.onrender.com/"
+
+@app.before_request
+def auto_set_webhook():
+    # Enregistrement automatique du webhook au premier appel pour contourner les blocages
+    try:
+        requests.get(f"https://api.telegram.org/bot{TOKEN}/setWebhook?url={RENDER_URL}")
+    except:
+        pass
 
 @app.route("/", methods=["GET"])
 def home():
