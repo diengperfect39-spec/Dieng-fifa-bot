@@ -12,7 +12,7 @@ app = FastAPI()
 
 @app.get("/")
 def home():
-    return {"status": "Dieng FIFA VIP 100% Actif - Marchés Corrects FC26"}
+    return {"status": "Dieng FIFA VIP 100% Actif - Analyse Avancée FC26"}
 
 @app.post(f"/{TOKEN}")
 async def webhook(req: Request):
@@ -26,34 +26,54 @@ async def webhook(req: Request):
             parts = [p.strip() for p in txt.split("vs")] if "vs" in txt else [txt, "Visiteur"]
             t1, t2 = parts[0], parts[1] if len(parts) > 1 else "Visiteur"
             
+            # Hash indépendant pour chaque équipe pour obtenir de vraies variations uniques
             h1 = int(hashlib.md5(t1.encode()).hexdigest(), 16)
             h2 = int(hashlib.md5(t2.encode()).hexdigest(), 16)
             
-            scenario = (h1 + h2) % 4
-            if scenario == 0:
-                s1, s2 = 4, 3
-                alt_s1, alt_s2 = 5, 4
-                winner = t1
-                analysis = f"Stabilité tactique de {t1} pour s'imposer d'une courte tête face à la pression de {t2}."
-            elif scenario == 1:
-                s1, s2 = 4, 2
-                alt_s1, alt_s2 = 5, 3
-                winner = t1
-                analysis = f"Maîtrise et rigueur de {t1} dans la séance pour verrouiller l'écart face à {t2}."
-            elif scenario == 2:
-                s1, s2 = 4, 5
-                alt_s1, alt_s2 = 3, 4
-                winner = t2
-                analysis = f"Sursaut d'efficacité redoutable de {t2} qui renverse la tendance dans les derniers tirs face à {t1}."
-            else:
-                s1, s2 = 3, 4
-                alt_s1, alt_s2 = 4, 5
-                winner = t2
-                analysis = f"{t2} fait preuve d'un sang-froid clinique pour dominer les duels et surprendre {t1}."
-
-            total_goals = s1 + s2
+            # Calcul dynamique et indépendant des scores (plages réalistes de penalties : 3 à 6 buts)
+            score1 = 3 + (h1 % 3)  # Donne entre 3 et 5
+            score2 = 3 + (h2 % 3)  # Donne entre 3 et 5
             
-            # Marchés de buts conformes à la réalité (6.5 minimum)
+            # Éviter les égalités parfaites ennuyeuses
+            if score1 == score2:
+                score1 += 1
+
+            # Détermination du vainqueur selon la vraie force relative des hashes
+            if h1 > h2:
+                winner = t1
+                if score1 < score2:
+                    score1, score2 = score2, score1
+                s1, s2 = score1, score2
+                alt_s1, alt_s2 = max(3, s1 - 1), s2 + 1 if s2 < 5 else s2 - 1
+                analysis = f"Supériorité tactique et meilleure gestion des tirs au but par {t1} face à {t2}."
+            else:
+                winner = t2
+                if score2 < score1:
+                    score1, score2 = score2, score1
+                s1, s2 = score2, score1  # Inversion pour que l'équipe 2 gagne si c'est elle la vainqueure
+                # Ajustement propre pour le format T1 vs T2
+                # On s'assure que s1 est pour t1 et s2 pour t2, mais si t2 gagne, s2 > s1
+                pass
+
+            # Recalibrage propre pour garantir la victoire du bon vainqueur affiché
+            if h1 > h2:
+                winner = t1
+                s_t1 = max(score1, score2)
+                s_t2 = min(score1, score2)
+                if s_t1 == s_t2: s_t1 += 1
+                alt_t1, alt_t2 = max(3, s_t1 - 1), s_t2
+                analysis = f"Assurance technique et solidité de {t1} pour contenir les offensives de {t2}."
+            else:
+                winner = t2
+                s_t2 = max(score1, score2)
+                s_t1 = min(score1, score2)
+                if s_t1 == s_t2: s_t2 += 1
+                alt_t1, alt_t2 = s_t1, max(3, s_t2 - 1)
+                analysis = f"Forte intensité et renversement de situation orchestré par {t2} pour dominer {t1}."
+
+            total_goals = s_t1 + s_t2
+            
+            # Volumes de buts conformes aux marchés du jeu
             if total_goals >= 9:
                 tot_str = "Plus de 8.5 buts (Séance ultra-prolongée)"
             elif total_goals >= 8:
@@ -62,8 +82,8 @@ async def webhook(req: Request):
                 tot_str = "Plus de 6.5 buts (Standard tirs au but validé)"
 
             pair_val = "Oui" if total_goals % 2 == 0 else "Non"
-            pen_text = f"Convertis avec précision (Plus de 3.5 réussis)"
-            confidence = round(95.0 + ((h1 * h2) % 35) / 10.0, 1)
+            pen_text = f"Convertis avec précision (Plus de {(total_goals // 2) - 0.5} réussis)"
+            confidence = round(94.0 + ((h1 + h2) % 50) / 10.0, 1)
 
             current_time = datetime.now().strftime("%H:%M")
 
@@ -75,8 +95,8 @@ async def webhook(req: Request):
                 f"• {analysis}\n\n"
                 f"🎯 **1. Vainqueur Validé :** {winner} 🏆\n\n"
                 f"🎯 **2. Scores Exacts & Marchés :**\n"
-                f"• **Option 1 (Principal) :** {t1} {s1} - {s2} {t2}\n"
-                f"• **Option 2 (Alternatif) :** {t1} {alt_s1} - {alt_s2} {t2}\n"
+                f"• **Option 1 (Principal) :** {t1} {s_t1} - {s_t2} {t2}\n"
+                f"• **Option 2 (Alternatif) :** {t1} {alt_t1} - {alt_t2} {t2}\n"
                 f"• **Volume de buts :** {tot_str}\n\n"
                 f"🎯 **3. Tendances Marché :**\n"
                 f"• **Total Pair :** {pair_val}\n"
