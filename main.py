@@ -1,7 +1,7 @@
 import os
 requests = __import__('requests')
 from datetime import datetime
-from FastAPI import FastAPI, Request
+from fastapi import FastAPI, Request
 
 TOKEN = "9068698544:AAFIhEz56h_fF1L7qNa8_OtRNpCX4LjjQrU"
 URL = f"https://api.telegram.org/bot{TOKEN}"
@@ -92,17 +92,4 @@ async def webhook(req: Request):
                 "🎯 **2. Scores Exacts & Marchés Buts (O/U) :**\n"
                 f"• **Option 1 (Principal) :** {t1_raw} {s1} - {s2} {t2_raw}\n"
                 f"• **Option 2 (Alternatif) :** {t1_raw} {alt1} - {alt2} {t2_raw}\n"
-                f"• **Marché Buts (O/U) :** {market_ou}\n\n"
-                "🎯 **3. Tendances Marché & Pénalties :**\n"
-                f"• **Total Pair :** {pair_val}\n"
-                f"• **Volume global estimé :** {total_goals} buts\n"
-                f"• **Statistique Pénalties :** {pen_missed}\n\n"
-                f"📊 **Indice de Confiance :** {confidence}%\n"
-            )
-            
-            requests.post(f"{URL}/sendMessage", json={"chat_id": chat_id, "text": out, "parse_mode": "Markdown"})
-                
-    except Exception as e:
-        print(f"Erreur : {e}")
-        
-    return {"status": "ok"}
+                f"• **Marché Buts (O/U) :** {market_ou}\
