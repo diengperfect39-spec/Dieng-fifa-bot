@@ -9,17 +9,16 @@ RENDER_URL = "https://dieng-fifa-bot.onrender.com"
 
 app = FastAPI()
 
-# Matrice complète avec profils tactiques réels (Attaque, Défense, Tendance de score)
-TEAM_PROFILES = {
-    "barcelone": {"att": 91, "def": 85, "style": "ouvert"},
-    "real madrid": {"att": 93, "def": 86, "style": "prolifique"},
-    "bayern munich": {"att": 90, "def": 84, "style": "ouvert"},
-    "manchester city": {"att": 94, "def": 87, "style": "prolifique"},
-    "paris saint-germain": {"att": 92, "def": 83, "style": "prolifique"},
-    "juventus": {"att": 87, "def": 88, "style": "ferme"},
-    "arsenal": {"att": 88, "def": 85, "style": "equilibre"},
-    "al nassr": {"att": 85, "def": 80, "style": "ouvert"},
-    "inter miami": {"att": 84, "def": 78, "style": "ferme"}
+TEAM_METRICS = {
+    "barcelone": {"att": 91, "def": 85},
+    "real madrid": {"att": 93, "def": 86},
+    "bayern munich": {"att": 90, "def": 84},
+    "manchester city": {"att": 94, "def": 87},
+    "paris saint-germain": {"att": 92, "def": 83},
+    "juventus": {"att": 87, "def": 88},
+    "arsenal": {"att": 88, "def": 85},
+    "al nassr": {"att": 85, "def": 80},
+    "inter miami": {"att": 84, "def": 78}
 }
 
 @app.on_event("startup")
@@ -29,7 +28,7 @@ def startup_event():
 
 @app.get("/")
 def home():
-    return {"status": "Dieng FIFA VIP Pro - Profils Dynamiques Adaptatifs Actifs"}
+    return {"status": "Dieng FIFA VIP Pro - Moteur Équilibré Petits/Gros Scores Actif"}
 
 @app.post(f"/{TOKEN}")
 async def webhook(req: Request):
@@ -47,54 +46,54 @@ async def webhook(req: Request):
                 t1 = t1_raw.lower()
                 t2 = t2_raw.lower()
                 
-                p1 = TEAM_PROFILES.get(t1, {"att": 86, "def": 83, "style": "equilibre"})
-                p2 = TEAM_PROFILES.get(t2, {"att": 86, "def": 83, "style": "equilibre"})
+                m1 = TEAM_METRICS.get(t1, {"att": 86, "def": 83})
+                m2 = TEAM_METRICS.get(t2, {"att": 86, "def": 83})
                 
-                # Calcul de la puissance globale
-                power1 = p1["att"] * 0.6 + p1["def"] * 0.4
-                power2 = p2["att"] * 0.6 + p2["def"] * 0.4
+                power1 = m1["att"] * 0.7 + m1["def"] * 0.3
+                power2 = m2["att"] * 0.7 + m2["def"] * 0.3
+                
+                # Signature unique pour varier dynamiquement entre match fermé, moyen ou ouvert
+                match_profile = abs(hash(t1_raw + t2_raw + datetime.now().strftime("%H:%M"))) % 3
                 
                 if power1 >= power2:
                     winner = t1_raw
                     loser = t2_raw
                     diff = power1 - power2
-                    is_team1_winner = True
+                    is_t1_win = True
                 else:
                     winner = t2_raw
                     loser = t1_raw
                     diff = power2 - power1
-                    is_team1_winner = False
+                    is_t1_win = False
 
-                # Adaptation fine du score selon le style combiné des équipes
-                combined_style = p1["style"] + "_" + p2["style"]
-                
-                if "ferme" in combined_style or diff > 4:
-                    # Match plus fermé ou domination tactique contrôlée
-                    if is_team1_winner:
-                        s1, s2 = 4, 2
-                        alt_1, alt_2 = 3, 2
+                # Attribution des scores selon le profil du match (fermé, moyen ou ouvert)
+                if match_profile == 0:
+                    # Match fermé / score court (ex: 4-1 ou 4-2 -> Total 5 à 6 buts -> Moins de 6.5)
+                    if diff > 2.5:
+                        s1, s2 = (4, 1) if is_t1_win else (1, 4)
+                        alt_1, alt_2 = (4, 2) if is_t1_win else (2, 4)
                     else:
-                        s1, s2 = 2, 4
-                        alt_1, alt_2 = 2, 3
-                    analysis_tone = f"Analyse de performance : {winner} impose une assise défensive rigoureuse et contrôle les débats face à {loser}."
-                elif "prolifique" in combined_style or diff < 1.0:
-                    # Match très ouvert, intense et poussé en mort subite (gros scores)
-                    if is_team1_winner:
-                        s1, s2 = 6, 5
-                        alt_1, alt_2 = 5, 4
-                    else:
-                        s1, s2 = 5, 6
-                        alt_1, alt_2 = 4, 5
-                    analysis_tone = f"Analyse de performance : Choc très ouvert entre {winner} et {loser}, la décision se fait au bout du suspense en mort subite."
-                else:
-                    # Match équilibré standard mais animé
-                    if is_team1_winner:
+                        s1, s2 = (4, 2) if is_t1_win else (2, 4)
+                        alt_1, alt_2 = (3, 2) if is_t1_win else (2, 3)
+                    analysis_tone = f"Analyse de performance : {winner} maîtrise son sujet et verrouille la rencontre pour s'imposer face à {loser}."
+                elif match_profile == 1:
+                    # Match disputé / score intermédiaire (ex: 4-3 ou 5-3 -> Total 7 à 8 buts)
+                    if is_t1_win:
                         s1, s2 = 4, 3
-                        alt_1, alt_2 = 5, 4
+                        alt_1, alt_2 = 5, 3
                     else:
                         s1, s2 = 3, 4
-                        alt_1, alt_2 = 4, 5
-                    analysis_tone = f"Analyse de performance : Duel serré où {winner} fait parler sa fraîcheur tactique pour dominer {loser}."
+                        alt_1, alt_2 = 3, 5
+                    analysis_tone = f"Analyse de performance : Duel tactique serré, {winner} fait la différence dans les derniers tirs face à {loser}."
+                else:
+                    # Match ouvert / score fleuve en mort subite (ex: 5-4 ou 6-5 -> Total 9 à 11 buts)
+                    if is_t1_win:
+                        s1, s2 = 5, 4
+                        alt_1, alt_2 = 6, 5
+                    else:
+                        s1, s2 = 4, 5
+                        alt_1, alt_2 = 5, 6
+                    analysis_tone = f"Analyse de performance : Choc très offensif entre {winner} et {loser}, la décision se fait au bout du suspense en mort subite."
 
                 # Règle absolue : Zéro match nul (mort subite obligatoire)
                 if s1 == s2:
@@ -103,22 +102,22 @@ async def webhook(req: Request):
                     alt_1 += 1
                 total_goals = s1 + s2
 
-                # Attribution précise et flexible du marché O/U selon le total réel du match
+                # Marché O/U strict aligné sur le total réel
                 if total_goals <= 6:
-                    over_under_str = "Moins de 6.5 buts (Séance fermée)"
+                    over_under_str = "Moins de 6.5 buts (Séance fermée & contrôlée)"
                 elif total_goals == 7:
-                    over_under_str = "Plus de 6.5 buts / Moins de 7.5 buts"
+                    over_under_str = "Plus de 6.5 buts"
                 elif total_goals == 8:
-                    over_under_str = "Plus de 7.5 buts / Moins de 8.5 buts"
+                    over_under_str = "Plus de 7.5 buts"
                 else:
                     over_under_str = "Plus de 8.5 buts (Séance ultra-prolifique)"
 
                 pair_val = "Oui" if total_goals % 2 == 0 else "Non"
-                pen_text = f"Tirs convertis selon le profil tactique (Volume global : {total_goals} buts)"
+                pen_text = f"Tirs convertis selon l'analyse tactique (Volume global : {total_goals} buts)"
                 
-                confidence = round(84.0 + min(diff * 3.5, 12.0), 1)
+                confidence = round(84.0 + min(diff * 3.0, 12.0), 1)
                 if confidence > 97.0: 
-                    confidence = 96.0
+                    confidence = 95.5
 
                 current_time = datetime.now().strftime("%H:%M")
 
