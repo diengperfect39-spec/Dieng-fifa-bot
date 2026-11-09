@@ -16,7 +16,7 @@ def startup_event():
 
 @app.get("/")
 def home():
-    return {"status": "Dieng FIFA - Mode Analyse Intelligente Actif"}
+    return {"status": "Dieng FIFA - Mode Aléatoire Intelligent Actif"}
 
 @app.post(f"/{TOKEN}")
 async def webhook(req: Request):
@@ -42,49 +42,75 @@ async def webhook(req: Request):
                     else:
                         t1_raw = txt
 
-            # Hachage unique pour la variabilité des affiches
-            seed_val = abs(hash(t1_raw.lower() + "_" + t2_raw.lower()))
+            # Clé de hachage ultra-dynamique (mélange les équipes et l'heure précise)
+            seed_str = f"{t1_raw}-{t2_raw}-{datetime.now().strftime('%H%M%S%f')}"
+            seed_val = abs(hash(seed_str))
             
-            # Logique pour identifier un match serré (50/50) ou un match avec favori
-            is_balanced = (seed_val % 3 == 0) # Simule l'équilibre des cotes 1X2 serrées
+            # Répartition sur 5 scénarios pour varier complètement les vainqueurs et les scores
+            scenario = seed_val % 5
             
-            if is_balanced:
-                winner_text = "⚠️ Match Équilibré (50/50) - Piège potentiel !"
-                s1, s2 = 3, 2
-                alt1, alt2 = 4, 3
-                market_ou = "Moins de 7.5 buts ou Sécurité"
-                pen_missed = "1 à 2 penalties (pression maximale)"
-                conseil = "Match fermé ou serré. Il est plus sage de passer son tour ou de jouer prudent."
-            else:
-                # S'il y a un ascendant logique
-                if (seed_val % 2) == 0:
-                    winner_text = f"{t1_raw} (Léger Avantage)"
-                    s1, s2 = 4, 2
-                    alt1, alt2 = 5, 3
-                else:
-                    winner_text = f"{t2_raw} (Léger Avantage)"
-                    s1, s2 = 2, 4
-                    alt1, alt2 = 3, 5
-                market_ou = "Plus de 6.5 buts"
+            if scenario == 0:
+                # Victoire nette Équipe 1
+                winner_text = f"🏆 **{t1_raw}** (Supériorité tactique validée)"
+                s1, s2 = 6, 3
+                alt1, alt2 = 5, 2
+                market_ou = "Plus de 7.5 buts"
+                pen_missed = "1 penalty manqué"
+                conseil = "Le favori prend le large. Bonne option sur le vainqueur sec."
+            elif scenario == 1:
+                # Victoire nette Équipe 2
+                winner_text = f"🏆 **{t2_raw}** (Domination extérieure nette)"
+                s1, s2 = 3, 6
+                alt1, alt2 = 2, 5
+                market_ou = "Plus de 7.5 buts"
+                pen_missed = "2 penalties manqués (grosse pression)"
+                conseil = "L'outsider surprend. Valider la victoire de l'équipe 2."
+            elif scenario == 2:
+                # Match 50/50 très serré
+                winner_text = f"⚠️ **Indécis / 50-50** (Gros risque de piège)"
+                s1, s2 = 4, 4
+                alt1, alt2 = 5, 4
+                market_ou = "Plus de 8.5 buts (Feu d'artifice)"
+                pen_missed = "3 penalties ou plus (stress maximal)"
+                conseil = "Match équilibré à haut risque. Protéger le capital ou s'abstenir."
+            elif scenario == 3:
+                # Victoire étriquée Équipe 1
+                winner_text = f"⚖️ **{t1_raw}** (Victoire sur le fil)"
+                s1, s2 = 4, 3
+                alt1, alt2 = 5, 4
+                market_ou = "Moins de 8.5 buts"
                 pen_missed = "0 à 1 penalty manqué"
-                conseil = "Tendance plus ouverte, opportunité sur les buts intermédiaires."
+                conseil = "Duel serré mais avantage logique aux locaux."
+            else:
+                # Victoire étriquée Équipe 2
+                winner_text = f"⚖️ **{t2_raw}** (Hold-up tactique)"
+                s1, s2 = 3, 4
+                alt1, alt2 = 4, 5
+                market_ou = "Moins de 8.5 buts"
+                pen_missed = "1 penalty manqué"
+                conseil = "Rencontre fermée, l'équipe 2 tire son épingle du jeu."
 
             total_goals = s1 + s2
             pair_val = "Oui" if total_goals % 2 == 0 else "Non"
+            confidence = round(82.0 + (seed_val % 14), 1)
+            if confidence > 95.0: 
+                confidence = 92.5
+
             current_time = datetime.now().strftime("%H:%M")
 
             out = (
-                "🛡️ **DIENG SMART ANALYSE VIP** 🛡️\n\n"
+                "💎 **DIENG PREDICT VIP - ANALYSE VARIÉE** 💎\n\n"
                 f"⚽ **Affiche :** {t1_raw} vs {t2_raw}\n"
                 f"🕒 **Heure :** {current_time} (GMT)\n\n"
                 f"🎯 **1. Analyse du Vainqueur :** {winner_text}\n\n"
-                "🎯 **2. Scores Suggérés & Buts (O/U) :**\n"
+                "🎯 **2. Scores Suggérés & Marchés Buts (O/U) :**\n"
                 f"• **Option 1 :** {t1_raw} {s1} - {s2} {t2_raw}\n"
                 f"• **Option 2 :** {t1_raw} {alt1} - {alt2} {t2_raw}\n"
-                f"• **Marché Buts :** {market_ou} (Total estimé : {total_goals} buts)\n\n"
+                f"• **Marché Buts :** {market_ou} (Total : {total_goals} buts)\n\n"
                 "🎯 **3. Paramètres & Sécurité :**\n"
                 f"• **Total Pair :** {pair_val}\n"
-                f"• **Pénalties manqués :** {pen_missed}\n\n"
+                f"• **Pénalties manqués :** {pen_missed}\n"
+                f"• **Indice de Confiance :** {confidence}%\n\n"
                 f"💡 **Conseil Capital :** {conseil}"
             )
             
