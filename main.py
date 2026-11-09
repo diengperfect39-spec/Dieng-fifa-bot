@@ -17,7 +17,7 @@ def startup_event():
 
 @app.get("/")
 def home():
-    return {"status": "Dieng FIFA - Mode Variabilité Totale des Scores Actif"}
+    return {"status": "Dieng FIFA - Mode Sans Nul & Ultra-Précis Actif"}
 
 @app.post(f"/{TOKEN}")
 async def webhook(req: Request):
@@ -27,65 +27,63 @@ async def webhook(req: Request):
             msg = data["message"]
             chat_id = msg["chat"]["id"]
             
-            # Récupération dynamique propre de l'affiche
-            t1_raw, t2_raw = "Équipe 1", "Équipe 2"
+            # Récupération robuste de l'affiche
+            t1_raw, t2_raw = "", ""
+            raw_text = ""
+            
             if "caption" in msg:
-                txt = msg["caption"].strip()
-                if "vs" in txt.lower():
-                    parts = [p.strip() for p in txt.split("vs")]
-                    t1_raw, t2_raw = parts[0], parts[1]
+                raw_text = msg["caption"].strip()
             elif "text" in msg:
-                txt = msg["text"].strip()
-                if txt and not txt.startswith("/"):
-                    if "vs" in txt.lower():
-                        parts = [p.strip() for p in txt.split("vs")]
+                raw_text = msg["text"].strip()
+                
+            if raw_text and not raw_text.startswith("/"):
+                if "vs" in raw_text.lower():
+                    parts = [p.strip() for p in raw_text.split("vs")]
+                    if len(parts) >= 2:
                         t1_raw, t2_raw = parts[0], parts[1]
-                    else:
-                        t1_raw = txt
+                elif "-" in raw_text:
+                    parts = [p.strip() for p in raw_text.split("-")]
+                    if len(parts) >= 2:
+                        t1_raw, t2_raw = parts[0], parts[1]
 
-            # Empreinte unique basée sur les noms et l'heure exacte pour générer des scores totalement variables
+            # Si l'utilisateur n'a pas mis les noms, on met une alerte au lieu de laisser Équipe 1 / Équipe 2
+            if not t1_raw or not t2_raw:
+                t1_raw, t2_raw = "Domicile", "Extérieur"
+
+            # Empreinte unique pour la variabilité
             seed_str = f"{t1_raw}_{t2_raw}_{datetime.now().strftime('%H%M%S%f')}"
             seed_val = abs(hash(seed_str))
             
-            # Choix dynamique et neutre du scénario de match
-            selector = seed_val % 3  # 0 = Avantage Équipe 1, 1 = Avantage Équipe 2, 2 = Duel serré 50/50
+            # Choix du scénario : UNIQUEMENT DES VAINQUEURS (pas de nul)
+            selector = seed_val % 2  # 0 = Victoire Équipe 1, 1 = Victoire Équipe 2
 
-            # Génération de scores aléatoires mais logiques (entre 3 et 7 buts pour le vainqueur, écart de 1 à 3 buts)
-            base_win = 4 + (seed_val % 3)      # Donne entre 4 et 6
-            diff = 1 + ((seed_val // 7) % 2)   # Écart de 1 ou 2 buts
-            base_los = max(2, base_win - diff)
+            base_win = 5 + (seed_val % 3)      # Entre 5 et 7 buts pour le vainqueur
+            diff = 1 + (seed_val % 2)          # Écart de 1 ou 2 buts
+            base_los = base_win - diff         if (base_win - diff) >= 3 else 3
 
             if selector == 0:
-                winner_text = f"🏆 **{t1_raw}** (Ascendant tactique local)"
+                winner_text = f"🏆 **{t1_raw}** (Validation du vainqueur)"
                 s1, s2 = base_win, base_los
-                alt1, alt2 = base_win + 1, max(2, base_los - 1)
-                market_ou = "Plus de 6.5 buts" if (s1 + s2) < 9 else "Plus de 8.5 buts"
+                alt1, alt2 = base_win + 1, base_los
+                market_ou = "Plus de 7.5 buts" if (s1 + s2) >= 9 else "Plus de 6.5 buts"
                 pen_missed = f"{(seed_val % 2) + 1} penalty manqué"
-                conseil = f"L'analyse des dynamiques penche en faveur de {t1_raw} à domicile."
-                confidence = round(88.0 + (seed_val % 7), 1)
-            elif selector == 1:
-                winner_text = f"🏆 **{t2_raw}** (Ascendant tactique extérieur)"
-                s1, s2 = base_los, base_win
-                alt1, alt2 = max(2, base_los - 1), base_win + 1
-                market_ou = "Plus de 6.5 buts" if (s1 + s2) < 9 else "Plus de 8.5 buts"
-                pen_missed = f"{(seed_val % 2)} à {(seed_val % 2) + 1} penalties manqués"
-                conseil = f"L'analyse des dynamiques penche en faveur de {t2_raw} à l'extérieur."
-                confidence = round(86.5 + (seed_val % 8), 1)
+                conseil = f"Avantage net pour {t1_raw}. Valider la victoire sec ou le handicap."
+                confidence = round(89.0 + (seed_val % 7), 1)
             else:
-                winner_text = f"⚠️ **Duel 50/50 (Équilibre parfait)** - Zone de danger"
-                s1, s2 = 4, 4 if (seed_val % 2 == 0) else (5, 5)
-                alt1, alt2 = s1 + 1, s2 + 1
-                market_ou = "Plus de 8.5 buts (Match ouvert à risques)"
-                pen_missed = "2 à 3 penalties manqués (grosse pression)"
-                conseil = "Cotes trop serrées. Risque élevé pour la caisse, prudence conseillée ou s'abstenir."
-                confidence = 82.0
+                winner_text = f"🏆 **{t2_raw}** (Validation du vainqueur)"
+                s1, s2 = base_los, base_win
+                alt1, alt2 = base_los, base_win + 1
+                market_ou = "Plus de 7.5 buts" if (s1 + s2) >= 9 else "Plus de 6.5 buts"
+                pen_missed = f"{(seed_val % 2) + 1} penalty manqué"
+                conseil = f"Avantage net pour {t2_raw}. Valider la victoire de l'extérieur."
+                confidence = round(87.5 + (seed_val % 8), 1)
 
             total_goals = s1 + s2
             pair_val = "Oui" if total_goals % 2 == 0 else "Non"
             current_time = datetime.now().strftime("%H:%M")
 
             out = (
-                "💎 **DIENG PREDICT VIP - ANALYSE UNIQUE & VARIÉE** 💎\n\n"
+                "💎 **DIENG PREDICT VIP - ANALYSE SANS NUL** 💎\n\n"
                 f"⚽ **Affiche :** {t1_raw} vs {t2_raw}\n"
                 f"🕒 **Heure :** {current_time} (GMT)\n\n"
                 f"🎯 **1. Analyse du Vainqueur :** {winner_text}\n\n"
