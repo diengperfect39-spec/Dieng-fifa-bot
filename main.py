@@ -1,5 +1,5 @@
 import os
-requests = __import__('requests')
+import requests
 from datetime import datetime
 from fastapi import FastAPI, Request
 
@@ -59,8 +59,10 @@ async def webhook(req: Request):
                 alt1, alt2 = base_score - diff + 1, base_score + 1
 
             # Sécurité pour éviter des scores négatifs ou aberrants
-            if s2 < 2: s2 = 2
-            if alt2 < 2: alt2 = 2
+            if s2 < 2:
+                s2 = 2
+            if alt2 < 2:
+                alt2 = 2
 
             total_goals = s1 + s2
             
@@ -80,7 +82,8 @@ async def webhook(req: Request):
 
             pair_val = "Oui" if total_goals % 2 == 0 else "Non"
             confidence = round(87.5 + ((seed_val % 9) * 1.1), 1)
-            if confidence > 97.0: confidence = 96.2
+            if confidence > 97.0:
+                confidence = 96.2
 
             current_time = datetime.now().strftime("%H:%M")
 
@@ -89,7 +92,20 @@ async def webhook(req: Request):
                 f"⚽ **Affiche :** {t1_raw} vs {t2_raw}\n"
                 f"🕒 **Heure :** {current_time} (GMT)\n\n"
                 f"🎯 **1. Vainqueur Validé :** {winner} 🏆\n\n"
-                "🎯 **2. Scores Exacts & Marchés Buts (O/U) :**\n"
+                "🎯 **2. Scores Exacts & Marchés Buts (O/U) :\n"
                 f"• **Option 1 (Principal) :** {t1_raw} {s1} - {s2} {t2_raw}\n"
                 f"• **Option 2 (Alternatif) :** {t1_raw} {alt1} - {alt2} {t2_raw}\n"
-                f"• **Marché Buts (O/U) :** {market_ou}\
+                f"• **Marché Buts (O/U) :** {market_ou}\n\n"
+                "🎯 **3. Tendances Marché & Pénalties :**\n"
+                f"• **Total Pair :** {pair_val}\n"
+                f"• **Volume global estimé :** {total_goals} buts\n"
+                f"• **Statistique Pénalties :** {pen_missed}\n\n"
+                f"📊 **Indice de Confiance :** {confidence}%\n"
+            )
+            
+            requests.post(f"{URL}/sendMessage", json={"chat_id": chat_id, "text": out, "parse_mode": "Markdown"})
+                
+    except Exception as e:
+        print(f"Erreur : {e}")
+        
+    return {"status": "ok"}
