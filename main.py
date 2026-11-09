@@ -10,14 +10,16 @@ RENDER_URL = "https://dieng-fifa-bot.onrender.com"
 app = FastAPI()
 
 TEAM_METRICS = {
+    "manchester city": {"power": 94},
     "real madrid": {"power": 93},
+    "liverpool": {"power": 93},
     "paris saint-germain": {"power": 92},
     "barcelone": {"power": 91},
     "bayern munich": {"power": 90},
-    "liverpool": {"power": 93},
-    "manchester city": {"power": 94},
+    "arsenal": {"power": 89},
     "juventus": {"power": 88},
-    "arsenal": {"power": 89}
+    "al nassr": {"power": 85},
+    "inter miami": {"power": 84}
 }
 
 @app.on_event("startup")
@@ -27,7 +29,7 @@ def startup_event():
 
 @app.get("/")
 def home():
-    return {"status": "Dieng FIFA Vision VIP - Mode Premium Total Actif"}
+    return {"status": "Dieng FIFA Vision VIP - Correctif Dynamique Actif"}
 
 @app.post(f"/{TOKEN}")
 async def webhook(req: Request):
@@ -37,10 +39,15 @@ async def webhook(req: Request):
             msg = data["message"]
             chat_id = msg["chat"]["id"]
             
-            # Détection automatique de l'affiche (Real vs PSG par défaut sur la capture, modifiable par texte)
-            t1_raw, t2_raw = "Real Madrid", "Paris Saint-Germain"
+            t1_raw, t2_raw = "Paris Saint-Germain", "Manchester City" # Par défaut sur ta dernière capture
             
-            if "text" in msg:
+            # Si l'utilisateur envoie une légende avec sa photo ou tape du texte
+            if "caption" in msg:
+                txt = msg["caption"].strip()
+                if "vs" in txt.lower():
+                    parts = [p.strip() for p in txt.split("vs")]
+                    t1_raw, t2_raw = parts[0], parts[1]
+            elif "text" in msg:
                 txt = msg["text"].strip()
                 if txt and not txt.startswith("/"):
                     if "vs" in txt.lower():
@@ -88,7 +95,7 @@ async def webhook(req: Request):
             out = (
                 "💎 **DIENG PREDICT PREMIUM - EXPERT FC26** 💎\n\n"
                 f"⚽ **Affiche :** {t1_raw} vs {t2_raw}\n"
-                f"🕒 **Heure d'analyse :** {current_time} (GMT)\n\n"
+                f"🕒 **Heure :** {current_time} (GMT)\n\n"
                 "📋 **Rapport d'expertise tactique :**\n"
                 f"• {winner} affiche une supériorité nette dans la conversion des tirs face à {loser}.\n\n"
                 f"🎯 **1. Vainqueur Validé :** {winner} 🏆\n\n"
